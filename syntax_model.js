@@ -1,11 +1,20 @@
 
+/*
+ * todo: 
+ * -> make region version of pattern
+ *    for matching strings
+ *
+ * expand parser to detect multiple words
+ * in a region,
+ *
+ * make parser use embedded patterns
+ * recursively
+ */
 
 /*
  * the basic idea is to have regions
  * then patterns inside the regions
  */
-
-
 
 /*
  * when the begining of a pattern or region
@@ -17,7 +26,6 @@
  * pattern are in the contains attribute
  * of a pattern
  */
-
 
 function alert(message)
 {
