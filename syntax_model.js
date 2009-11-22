@@ -26,11 +26,11 @@ function alert(message)
 
 
 PatternBody = {
-    startTag: function()
+    start_tag: function()
     {
         return  '<span class="syntax-' + this.name + '" >'; 
     },
-    endTag: function()
+    end_tag: function()
     {
         return  '</span>'; 
     },
@@ -39,9 +39,13 @@ PatternBody = {
      * the arguments for if the object matches
      * or not are the character and the index 
      * of that character in the pattern
+     *
+     * todo: plans are to expand this to
+     * evaluate regions as well such as
+     * strings
      */
     _count: 0, 
-    isMatch: function(c)
+    is_match: function(c)
     {
         if(this._count == this._pattern.length) 
         {
@@ -87,8 +91,6 @@ syntax_function = new Pattern('function');
 
 syntax_string = new Pattern('');
 
-alert(syntax_function); 
-
 
 // funcitonality inside Parser Object eventually
 
@@ -98,22 +100,37 @@ function Parser(name)
 }
 
 Parser.prototype = {
-    patterns:[],// patterns to look for 
-    value:'',// end value of  
-    shelves:[],// levels of syntax beeing built
-    highlight: function(content){ 
-        /*
+    patterns:[syntax_function],// patterns to look for 
+    _value:'',// end value of  
+    _shelves:[],// levels of syntax beeing built
+    highlight: function(content)
+    { 
+        // will eventually be dynamic
+        shelf_level = 0;
+        this._shelves[shelf_level] = '';
+        pattern = 0;
+
         for(var i = 0; i < content.length ;i++)
         {
             // syntax function to be replaced by  
-            if(syntax_function.isMatch(content[i]) == Parser.NOMATCH) 
+            match_value = this.patterns[pattern].is_match(content[i]); 
+
+            if(match_value == PatternBody.NOMATCH) 
             {
-                ;
+                this._value += content[i];
             }
-            print('current char:' + test_string[i] + ' is: ' + );
+            else if(match_value == PatternBody.MATCHING)
+            {
+                this._shelves[shelf_level] += content[i];
+            }
+            else if(match_value == PatternBody.MATCH)
+            {
+                this._value += this.patterns[pattern].start_tag();
+                this._value += this._shelves[shelf_level];
+                this._value += this.patterns[pattern].end_tag();
+            }
         }
-        */
-        return content;
+        return this._value;
     }
 }
 
@@ -121,3 +138,5 @@ parser = new Parser('first parser');
 
 test_string = 'a function in here'; 
 print(parser.highlight(test_string));
+
+
