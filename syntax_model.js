@@ -42,7 +42,7 @@ PatternBody = {
     {
         return  '</span>'; 
     },
-    _pattern: 'function',
+    _pattern: '!!!!',
     /*
      * the arguments for if the object matches
      * or not are the character and the index 
@@ -76,28 +76,32 @@ PatternBody = {
     NOMATCH: 0,
 }
 
-function Pattern(name)
+function Pattern(name,pattern)
 {
    this.name = name 
+   this._pattern = pattern
 }
 
 Pattern.prototype = PatternBody;
 
-function MatchPattern()
+function MatchPattern(name,start,end)
 {
     this.name = name;
+    this._pattern = {'start':start,'end':end}
 }
 
-function MatchPattern(name)
-{
-    this.name = name;
-}
-
+/*
 MatchPattern.prototype = PatternBody;
+MatchPattern.prototype.is_match = function(){
+    // customized begining to end comparison will happen here
+    return 0 
+}
+*/
 
-syntax_function = new Pattern('function');
+syntax_function = new Pattern('function','function');
 
-syntax_string = new Pattern('');
+syntax_apos_string = new MatchPattern('string','\'','\'');
+syntax_quote_string = new MatchPattern('string','"','"');
 
 
 // funcitonality inside Parser Object eventually
@@ -114,31 +118,34 @@ Parser.prototype = {
     highlight: function(content)
     { 
         // will eventually be dynamic
-        shelf_level = 0;
-        this._shelves[shelf_level] = '';
-        pattern = 0;
+        l_i = 0; // shelf level
+        this._shelves[l_i] = '';
+        p_i = 0; // pattern index 
 
+        this._run_highlight(content);
+
+        return this._value;
+    }, 
+    _run_highlight: function(content) 
+    {
         for(var i = 0; i < content.length ;i++)
         {
-            // syntax function to be replaced by  
-            match_value = this.patterns[pattern].is_match(content[i]); 
-
-            if(match_value == PatternBody.NOMATCH) 
-            {
-                this._value += content[i];
-            }
-            else if(match_value == PatternBody.MATCHING)
-            {
-                this._shelves[shelf_level] += content[i];
-            }
-            else if(match_value == PatternBody.MATCH)
-            {
-                this._value += this.patterns[pattern].start_tag();
-                this._value += this._shelves[shelf_level];
-                this._value += this.patterns[pattern].end_tag();
-            }
+            match_value = this._test_match(content[i], p_i); 
+            this._evaluate(content[i], this.patterns[p_i], match_value, l_i) 
         }
-        return this._value;
+    },
+    _test_match: function(c,p_i)
+    {
+        return this.patterns[p_i].is_match(c); 
+    },
+    _evaluate: function(c, pattern, match_value, level) 
+    {
+        if(match_value == PatternBody.NOMATCH) 
+            this._value += c;
+        else if(match_value == PatternBody.MATCHING)
+            this._shelves[level] += c;
+        else if(match_value == PatternBody.MATCH)
+            this._value += pattern.start_tag() + this._shelves[level] + pattern.end_tag();
     }
 }
 
