@@ -92,7 +92,8 @@ function MatchPattern(name,start,end)
 
 /*
 MatchPattern.prototype = PatternBody;
-MatchPattern.prototype.is_match = function(){
+MatchPattern.prototype.is_match = function()
+{
     // customized begining to end comparison will happen here
     return 0 
 }
@@ -128,10 +129,14 @@ Parser.prototype = {
     }, 
     _run_highlight: function(content) 
     {
-        for(var i = 0; i < content.length ;i++)
+        count = 0;
+        while(count < content.length) 
         {
+            i = count
             match_value = this._test_match(content[i], p_i); 
-            this._evaluate(content[i], this.patterns[p_i], match_value, l_i) 
+            this._evaluate(content[i], this.patterns[p_i], match_value, l_i);
+            if(match_value != PatternBody.MATCH)
+                count++;
         }
     },
     _test_match: function(c,p_i)
