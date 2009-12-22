@@ -3,6 +3,13 @@
  * todo: 
  * -> make region version of pattern
  *    for matching strings
+ *      would work by defining another 
+ *      constant called matching which
+ *      designates a match but no 
+ *      increment, so it's a starting
+ *      pattern unlimited space in
+ *      the middle and then an ending 
+ *      pattern
  *
  * expand parser to detect multiple words
  * in a region,
@@ -34,6 +41,7 @@ function alert(message)
 
 
 PatternBody = {
+
     start_tag: function()
     {
         return  '<span class="syntax-' + this.name + '" >'; 
@@ -57,7 +65,7 @@ PatternBody = {
     {
         if(this._count == this._pattern.length) 
         {
-            this._count = 0; 
+            this.reset()
             return this.MATCH;
         }
         else if(this._pattern[this._count] == c)
@@ -67,8 +75,13 @@ PatternBody = {
         }    
         else
         {
+            this.reset()
             return this.NOMATCH; 
         }
+    },
+    reset:function()
+    {
+        this._count = 0; 
     },
     contains:[],
     MATCH:2,
@@ -78,8 +91,8 @@ PatternBody = {
 
 function Pattern(name,pattern)
 {
-   this.name = name 
-   this._pattern = pattern
+    this.name = name 
+    this._pattern = pattern
 }
 
 Pattern.prototype = PatternBody;
@@ -100,6 +113,8 @@ MatchPattern.prototype.is_match = function()
 */
 
 syntax_function = new Pattern('function','function');
+syntax_for = new Pattern('keyword','for');
+syntax_is = new Pattern('keyword','is');
 
 syntax_apos_string = new MatchPattern('string','\'','\'');
 syntax_quote_string = new MatchPattern('string','"','"');
@@ -113,7 +128,7 @@ function Parser(name)
 }
 
 Parser.prototype = {
-    patterns:[syntax_function],// patterns to look for 
+    patterns:[],// patterns to look for 
     _value:'',// end value of  
     _shelves:[],// levels of syntax beeing built
     highlight: function(content)
@@ -121,23 +136,24 @@ Parser.prototype = {
         // will eventually be dynamic
         l_i = 0; // shelf level
         this._shelves[l_i] = '';
-        p_i = 0; // pattern index 
+        p_i = 0; // hard coded to 0 for single pattern mode for now 
 
-        this._run_highlight(content);
+        this._run_stream(content);
 
         return this._value;
     }, 
-    _run_highlight: function(content) 
+    _run_stream: function(content) 
     {
-        count = 0;
-        while(count < content.length) 
+        for(var i = 0; i < content.length; i++)  
         {
-            i = count
-            match_value = this._test_match(content[i], p_i); 
-            this._evaluate(content[i], this.patterns[p_i], match_value, l_i);
-            if(match_value != PatternBody.MATCH)
-                count++;
+            c = content[i];
+            this._run_char(c);
         }
+        this._run_char(null); // clear the last pattern if necessary 
+    },
+    _run_char: function(c){
+        match_value = this._test_match(c, p_i); 
+        this._evaluate(c, this.patterns[p_i], match_value, l_i);
     },
     _test_match: function(c,p_i)
     {
@@ -146,17 +162,36 @@ Parser.prototype = {
     _evaluate: function(c, pattern, match_value, level) 
     {
         if(match_value == PatternBody.NOMATCH) 
-            this._value += c;
+            this._value += this._get_shelf(level) + c;
         else if(match_value == PatternBody.MATCHING)
             this._shelves[level] += c;
         else if(match_value == PatternBody.MATCH)
-            this._value += pattern.start_tag() + this._shelves[level] + pattern.end_tag();
+            this._value += pattern.start_tag() + this._get_shelf(level) + pattern.end_tag();
+    }, 
+    _get_shelf: function(level)
+    {
+        value = this._shelves[level];
+        this._shelves[level] = '';
+        return value; 
     }
 }
 
-parser = new Parser('first parser'); 
 
-test_string = 'a function in here'; 
+// ---------------- testing code --------------------------
+parser = new Parser('first parser'); 
+//parser.patterns = [syntax_function, syntax_for, syntax_for]
+parser.patterns = [ syntax_function ]; 
+//parser.patterns = [ syntax_for ]; 
+
+test_string = 'a function in here for'; 
+print("\n\n\n")
 print(parser.highlight(test_string));
+
+print(parser._shelves.length);
+for(var i in parser._shelves)
+{
+    print(parser._shelves[i])
+}
+
 
 
