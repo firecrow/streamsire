@@ -40,14 +40,9 @@ function alert(message)
 } 
 
 PatternBody = {
-    start_tag: function()
-    {
-        return  '<span class="syntax-' + this.name + '" >'; 
-    },
-    end_tag: function()
-    {
-        return  '</span>'; 
-    },
+    NO_MATCH: 0,  
+    MATCHING: 1,
+    MATCH:2,
     _pattern: '!!!!',
     /*
      * the arguments for if the object matches
@@ -59,6 +54,14 @@ PatternBody = {
      * strings
      */
     _count: 0, 
+    start_tag: function()
+    {
+        return  '<span class="syntax-' + this.name + '" >'; 
+    },
+    end_tag: function()
+    {
+        return  '</span>'; 
+    },
     is_match: function(c)
     { 
         if(this._pattern[this._count] == c)
@@ -76,17 +79,13 @@ PatternBody = {
         else
         {
             this.reset()
-            return this.NOMATCH; 
+            return this.NO_MATCH; 
         }
     },
     reset:function()
     {
         this._count = 0; 
-    },
-    contains:[],
-    MATCH:2,
-    MATCHING: 1,
-    NOMATCH: 0,
+    }
 }
 
 function Pattern(name,pattern)
@@ -95,29 +94,85 @@ function Pattern(name,pattern)
     this._pattern = pattern
 }
 
-Pattern.prototype = PatternBody;
+for(prop in PatternBody)
+    Pattern.prototype[prop] = PatternBody[prop];
 
-function MatchPattern(name,start,end)
+
+function RegionPattern(name,start,end)
 {
     this.name = name;
-    this._pattern = {'start':start,'end':end}
+    this._pattern = {'start':new Pattern(null,start),'end':new Pattern(null,end)}
 }
 
-/*
-MatchPattern.prototype = PatternBody;
-MatchPattern.prototype.is_match = function()
-{
-    // customized begining to end comparison will happen here
-    return 0 
-}
-*/
 
-syntax_function = new Pattern('function','function');
-syntax_for = new Pattern('keyword','for');
-syntax_is = new Pattern('keyword','is');
+RegionPatternBody = {
+    _match_stage:0,
+    _START_MATCHING:3,
+    _MID_MATCHING:4,
+    _END_MATCHING:5,
+    is_match: function(c)
+    {
+        switch(this._match_stage)
+        {
+            case this.NO_MATCH:
+            case this._START_MATCHING:
+                return this._is_start_match(c); 
+                break;
+            case this._MID_MATCHING:
+            case this._END_MATCHING:
+                return this._is_end_match(c); 
+                break;
+        }
+        return this.NO_MATCH;
+    }, 
+    _is_start_match: function(c)
+    {
+        switch(this._pattern.start.is_match(c))
+        {
+            case this.NO_MATCH:
+                return this.NO_MATCH;
+                break;
+            case this.MATCHING:
+                this._match_stage = this._START_MATCHING;
+                return this.MATCHING;
+                break; 
+            case this.MATCH:
+                this._match_stage = this._MID_MATCHING
+                return this.MATCHING;
+                break; 
+        }
+    },
+    _is_end_match: function(c)
+    {
+        switch(this._pattern.end.is_match(c))
+        {
+            case this.MATCHING:
+                this._match_stage = this._END_MATCHING
+                return this.MATCHING;
+                break; 
+            case this.MATCH:
+                this.reset()
+                return this.MATCH;
+                break; 
+            default:
+                return this.MATCHING;
+                break;
+        }
+    }, 
+    reset: function()
+    {
+        this._match_stage = this.NO_MATCH;
+    }
+}    
 
-syntax_apos_string = new MatchPattern('string','\'','\'');
-syntax_quote_string = new MatchPattern('string','"','"');
+for(prop in PatternBody)
+    RegionPattern.prototype[prop] = PatternBody[prop];
+
+for(prop in RegionPatternBody)
+    RegionPattern.prototype[prop] = RegionPatternBody[prop];
+
+// syntax_apos_string = new RegionPattern('string','\'','\'');
+// syntax_quote_string = new RegionPattern('string','"','"');
 
 
 // funcitonality inside Parser Object eventually
@@ -179,7 +234,7 @@ CompareManager.prototype = {
     {
         switch(this.statemanager.test_match(c, pattern_index))
         {
-            case Pattern.prototype.NOMATCH:
+            case Pattern.prototype.NO_MATCH:
                 var val = this._get_shelf(pattern_index) + c; 
                 break;
             case Pattern.prototype.MATCHING:
@@ -263,7 +318,7 @@ StateManager.prototype = {
     _init_state: function()
     {
         for(var pi=0; pi < this._target.patterns.length; pi++)
-            this._pattern_states[pi] = Pattern.prototype.NOMATCH;
+            this._pattern_states[pi] = Pattern.prototype.NO_MATCH;
     },
     _show_states_debug: function()
     {
@@ -274,15 +329,30 @@ StateManager.prototype = {
 
 
 
-// ---------------- testing code --------------------------
-// parser = new Parser('first parser',[syntax_function]); 
-// parser = new Parser('first parser',[syntax_function, syntax_is]); 
-print("\n")
-parser = new Parser(syntax_function, syntax_for, syntax_is); 
-
-test_string = 'a function in here for is'; 
+// ---------------- testing code for Parser --------------------------
+/**/
+var syntax_function = new Pattern('function','function');
+var syntax_for = new Pattern('keyword','for');
+var syntax_is = new Pattern('keyword','is');
+var regpatt = new RegionPattern('string','"','"');
+print("\n"); 
+parser = new Parser(syntax_function, syntax_for, syntax_is, regpatt); 
+test_string = 'a function in "here" for is'; 
 print(test_string + '\n')
-print(parser.parse_debug(test_string));
-//print(parser.parse(test_string));
+// print(parser.parse_debug(test_string));
+print(parser.parse(test_string));
+/**/
 
+// ---------------- testing code for RegionPattern --------------------------
+
+// print('\n\n');
+// var content = " llalalal < fjksldfkj fjdkfj > fjskdlfkjfdks"
+// print(regpatt); 
+// 
+// for(var i = 0; i < content.length; i ++)
+// {
+//     c = content[i]; 
+//     print('c:' + c + ' is:' + regpatt.is_match(c));
+// }
+// 
 
