@@ -37,7 +37,7 @@
 function alert(message)
 {
     print(message);
-}    
+} 
 
 PatternBody = {
     start_tag: function()
@@ -59,25 +59,25 @@ PatternBody = {
      * strings
      */
     _count: 0, 
-    _match_state:0,
     is_match: function(c)
-    {   
-        if(this._count == (this._pattern.length -1)) 
+    { 
+        if(this._pattern[this._count] == c)
         {
-            this.reset()
-            this._match_state = this.MATCH;
-        }
-        else if(this._pattern[this._count] == c)
-        {
-            this._count++;
-            this._match_state = this.MATCHING;
+            if(this._count == (this._pattern.length -1)) 
+            {
+                this.reset()
+                this._count++;
+                return this.MATCH;
+            }else{ 
+                this._count++;
+                return this.MATCHING;
+            }
         }    
         else
         {
             this.reset()
-            this._match_state = this.NOMATCH; 
+            return this.NOMATCH; 
         }
-        return this._match_state;
     },
     reset:function()
     {
@@ -122,141 +122,167 @@ syntax_quote_string = new MatchPattern('string','"','"');
 
 // funcitonality inside Parser Object eventually
 
-function Parser(name,patterns)
+function Parser()
 {
-    this.name = name;
-    this.set_patterns(patterns);
+    if (arguments.length < 1) 
+        throw Error('Parser: requires atlest one Pattern object in the arguments list');
+    this.comparemanager = new CompareManager(arguments);
 }
 
 Parser.prototype = {
-    patterns:[],// patterns to look for 
-    _value:'',// end value of  
-    _shelves:[],// levels of syntax beeing built
-    _head:0,// the last character added from the stream
-    _state:0,
-    _match_in_progress:0,
-    set_patterns: function(patterns)
-    {
-        this.patterns = patterns;
-        for(var i = 0 ; i < patterns.length; i ++){
-            // make empty strings to avoid undefined or null 
-            // appearing in the content
-            this._shelves[i] = '';
-        }
-    }, 
-    highlight: function(content)
-    { 
-        this._run_stream(content);
-        return this._value;
-    }, 
-    _run_stream: function(content) 
+    _value:'',  
+    comparemanager:{},
+    parse: function(content) 
     {
         for(var i = 0; i < content.length; i++)  
-        {
-            c = content[i];
-            this._run_char(c);
-            // print('pos:' + i + ' head: ' + this._head)
-        }
+            this._value += this.comparemanager.run(content[i]);  
+        return this._value;
     },
-    _run_char: function(c)
+    parse_debug: function(content)
     {
-        var push = [];
+        var debug_val = ''
+        for(var i = 0; i < content.length; i++)  
+        {
+            var val = this.comparemanager.run(content[i]);  
+            debug_val += 'c:' + content[i] + ' process:' + this.comparemanager.statemanager.state + ' value:\'' + val + '\'';
+            debug_val += '\n'; 
+            this._value += val;  
+        }
+        return debug_val + '\n\n' + this._value;
+    }
+}
+
+function CompareManager(patterns)
+{
+    this.patterns = patterns;
+    this.statemanager = new StateManager(this);
+    this._setup_shelves();
+}
+
+CompareManager.prototype = {
+    _shelves:[],// levels of syntax beeing built
+    statemanager:{}, 
+    patterns:{},
+    run: function(c)
+    {
+        var values = this._getvalues(c); 
+        return this.statemanager.filter_by_state(values);
+    },
+    _getvalues: function(c)
+    {
+        values = []
         for(var pi = 0; pi < this.patterns.length; pi++)
-        {
-            push[pi] = this._run_pattern_on_char(c,pi);
-        }
-        print('c:' + c + ' match:' + this._match_in_progress); 
-        if(!this._match_in_progress)
-        {
-            value = '';
-            for(var i=0; i < push.length; i++){
-                val = push[i];
-                if (val.length > value.length)
-                    value = val;
-            }
-            // print(value);
-            this._append_value(value);
-        } 
+            values.push(this._evaluate_pattern(c,pi));
+        return values;
     },
-    _run_pattern_on_char: function(c,pi){
-        li = pi; 
-        match_value = this._test_match(c, pi); 
-        return this._evaluate(c, this.patterns[pi], match_value, li);
-    },
-    _test_match: function(c,pi)
+    _evaluate_pattern: function(c, pattern_index) 
     {
-         var state = this.patterns[pi]._match_state;
-         match_value = this.patterns[pi].is_match(c); 
-         if (match_value != state)
-            this._update_match_state(); 
-         return match_value;
-    },
-    _update_match_state: function()
-    {
-        var state = PatternBody.NOMATCH;
-        for(var i =0; i < this.patterns.length; i++){
-           if(this.patterns[i]._match_state == PatternBody.MATCHING)
-               state = PatternBody.MATCHING;
-        }
-        if(state == PatternBody.MATCHING)
-            this._match_in_progress = 1; 
-        else
-            this._match_in_progress = 0; 
-    },
-    _evaluate: function(c, pattern, match_value, level) 
-    {
-        var push_value = ''
-        if(match_value == PatternBody.NOMATCH) 
+        switch(this.statemanager.test_match(c, pattern_index))
         {
-            var val = this._get_shelf(level) + c; 
-            this._increment_head(val.length);
-            push_value = val;
+            case Pattern.prototype.NOMATCH:
+                var val = this._get_shelf(pattern_index) + c; 
+                break;
+            case Pattern.prototype.MATCHING:
+                var val = this._shelves[pattern_index] += c;
+                break;
+            case Pattern.prototype.MATCH: 
+                var pattern = this.patterns[pattern_index];
+                var val = '';
+                val += pattern.start_tag();
+                val += this._get_shelf(pattern_index) + c;
+                val += pattern.end_tag();
+                break;
+            default:
+                var val = '';
+                break; 
         }
-        else if(match_value == PatternBody.MATCHING)
-        {
-            this._shelves[level] += c;
-        }
-        else if(match_value == PatternBody.MATCH)
-        {
-            push_value += pattern.start_tag();
-            var val = this._get_shelf(level) + c;
-            push_value += val;
-            this._increment_head(val.length);
-            push_value += pattern.end_tag();
-        }
-        return push_value; 
-    }, 
-    _append_value: function(content,extra)
-    {
-        this._value += content;
-    }, 
-    _increment_head: function(amount)
-    {
-        this._head += amount;
+        return val; 
     }, 
     _get_shelf: function(level)
     {
         value = this._shelves[level];
         this._shelves[level] = '';
         return value; 
+    }, 
+    _setup_shelves: function()
+    {
+        for(var i = 0 ; i < this.patterns.length; i ++)
+            this._shelves[i] = '';
+    } 
+}
+
+function StateManager(target)
+{
+    this._target = target;
+    this._init_state(); 
+} 
+
+StateManager.prototype = {
+    MATCH_PENDING:1,
+    NOT_PENDING:0,
+    state:0,
+    _target:{},
+    _pattern_states:[],
+    test_match: function(c,pi)
+    {
+         match_value = this._target.patterns[pi].is_match(c); 
+         this._update_state(pi, match_value); 
+         return match_value;
+    },
+    _update_state: function(pattern_index, value)
+    {
+        if(value == this._pattern_states[pattern_index])
+            return;
+
+        this._pattern_states[pattern_index] = value; 
+
+        for(var pi=0; pi < this._target.patterns.length; pi++){
+           if(this._pattern_states[pi] == Pattern.prototype.MATCHING)
+           {
+                this.state = this.MATCH_PENDING; 
+                return;
+           }
+        }
+        this.state = this.NOT_PENDING; 
+    }, 
+    filter_by_state: function(values)
+    {
+        function get_longest_result(results)
+        {
+            val = ''; 
+            for(var i=0; i < results.length; i++)
+                if (values[i].length > val.length)
+                    val = values[i];
+            return val;
+        } 
+
+        if(this.state == this.NOT_PENDING)
+            return get_longest_result(values);
+        return ''; 
+    },
+    _init_state: function()
+    {
+        for(var pi=0; pi < this._target.patterns.length; pi++)
+            this._pattern_states[pi] = Pattern.prototype.NOMATCH;
+    },
+    _show_states_debug: function()
+    {
+        for(var pi=0; pi < this._target.patterns.length; pi++)
+            print('pi:' + pi + ' state:' + this._pattern_states[pi]);
     }
 }
+
 
 
 // ---------------- testing code --------------------------
 // parser = new Parser('first parser',[syntax_function]); 
 // parser = new Parser('first parser',[syntax_function, syntax_is]); 
-parser = new Parser('first parser',[syntax_function, syntax_for,syntax_is]); 
+print("\n")
+parser = new Parser(syntax_function, syntax_for, syntax_is); 
 
 test_string = 'a function in here for is'; 
-print("\n")
 print(test_string + '\n')
-print(parser.highlight(test_string));
-
-print(parser._shelves.length);
-for(var i in parser._shelves)
-{
-    print(parser._shelves[i])
-}
+print(parser.parse_debug(test_string));
+//print(parser.parse(test_string));
 
 
