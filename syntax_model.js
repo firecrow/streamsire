@@ -1,39 +1,4 @@
 
-/*
- * todo: 
- * -> make region version of pattern
- *    for matching strings
- *      would work by defining another 
- *      constant called matching which
- *      designates a match but no 
- *      increment, so it's a starting
- *      pattern unlimited space in
- *      the middle and then an ending 
- *      pattern
- *
- * expand parser to detect multiple words
- * in a region,
- *
- * make parser use embedded patterns
- * recursively
- */
-
-/*
- * the basic idea is to have regions
- * then patterns inside the regions
- */
-
-/*
- * when the begining of a pattern or region
- * is found, a pattern object is created
- * this pattern object is iterated
- * through until the end
- *
- * patterns which appear inside the main
- * pattern are in the contains attribute
- * of a pattern
- */
-
 function alert(message)
 {
     print(message);
@@ -116,10 +81,17 @@ for(prop in TagPatternBody)
     TagPattern.prototype[prop] = TagPatternBody[prop];
 
 
-function RegionPattern(name,start,end)
+function RegionPattern(name,start,mid_patterns,end)
 {
     this.name = name;
-    this._pattern = {'start':new Pattern(null,start),'end':new Pattern(null,end)}
+    if(mid_patterns && mid_patterns.constructor == Array)
+    {
+        var mid_parser = new Parser();
+        Parser.apply(mid_parser, mid_patterns);
+    }
+    else
+        var mid_parser = null; 
+    this._pattern = {'start':new Pattern(null,start),'mid':mid_parser,'end':new Pattern(null,end)}
 }
 for(prop in TagPattern.prototype)
     RegionPattern.prototype[prop] = TagPattern.prototype[prop];
@@ -179,10 +151,14 @@ RegionPatternBody = {
                 return this.MATCH;
                 break; 
             default:
-                this._shelf += c;
+                this._is_mid_match(c);
                 return this.MATCHING;
                 break;
         }
+    }, 
+    _is_mid_match: function(c)
+    {
+        this._shelf += this._pattern.mid.comparemanager.run(c);
     }, 
     reset: function()
     {
@@ -192,17 +168,12 @@ RegionPatternBody = {
 for(prop in RegionPatternBody)
     RegionPattern.prototype[prop] = RegionPatternBody[prop];
 
-// syntax_apos_string = new RegionPattern('string','\'','\'');
-// syntax_quote_string = new RegionPattern('string','"','"');
-
-
-// funcitonality inside Parser Object eventually
 
 function Parser()
-{
-    if (arguments.length < 1) 
-        throw Error('Parser: requires atlest one Pattern object in the arguments list');
-    this.comparemanager = new CompareManager(arguments);
+{                                                    
+    // enable dynamic argument assigment 
+    // e.g. var parser_obj = new Parser(); Parser.apply(parser_obj, args);
+    if(arguments.length) this.comparemanager = new CompareManager(arguments);
 }
 
 Parser.prototype = {
@@ -342,10 +313,15 @@ StateManager.prototype = {
 var syntax_function = new TagPattern('function','function');
 var syntax_for = new TagPattern('keyword','for');
 var syntax_is = new TagPattern('keyword','is');
-var regpatt = new RegionPattern('string','"','"');
+
+var nl = new TagPattern('string-escape-n','\\n');
+var ret = new TagPattern('string-escape-r','\\r');
+var tab = new TagPattern('string-escape-t','\\t');
+var syntax_string = new RegionPattern('string','"',[nl,ret,tab],'"');
+
 print("\n"); 
-parser = new Parser(syntax_function, syntax_for, syntax_is, regpatt); 
-test_string = 'a function in "here" for is'; 
+parser = new Parser(syntax_function, syntax_for, syntax_is, syntax_string); 
+test_string = 'a function in "\\tthere\\n" for is'; 
 print(test_string + '\n')
 // print(parser.parse_debug(test_string));
 print(parser.parse(test_string));
