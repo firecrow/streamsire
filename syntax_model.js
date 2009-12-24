@@ -39,37 +39,26 @@ function alert(message)
     print(message);
 } 
 
-PatternBody = {
+function Pattern(name,pattern)
+{
+    this.name = name 
+    this._pattern = pattern
+}
+PatternInterface = {
     NO_MATCH: 0,  
     MATCHING: 1,
-    MATCH:2,
+    MATCH: 2,
     _pattern: '!!!!',
-    /*
-     * the arguments for if the object matches
-     * or not are the character and the index 
-     * of that character in the pattern
-     *
-     * todo: plans are to expand this to
-     * evaluate regions as well such as
-     * strings
-     */
     _count: 0, 
-    start_tag: function()
-    {
-        return  '<span class="syntax-' + this.name + '" >'; 
-    },
-    end_tag: function()
-    {
-        return  '</span>'; 
-    },
+    _shelf:'',
     is_match: function(c)
     { 
         if(this._pattern[this._count] == c)
         {
+            this._shelf += c;
             if(this._count == (this._pattern.length -1)) 
             {
                 this.reset()
-                this._count++;
                 return this.MATCH;
             }else{ 
                 this._count++;
@@ -85,17 +74,46 @@ PatternBody = {
     reset:function()
     {
         this._count = 0; 
+    },
+    get_shelf: function()
+    {
+        var val = this._shelf;
+        this._shelf = ''; 
+        return val; 
+    }, 
+    get: function()
+    {
+        this.get_shelf();
     }
 }
+for(prop in PatternInterface)
+    Pattern.prototype[prop] = PatternInterface[prop];
 
-function Pattern(name,pattern)
+
+function TagPattern(name,pattern)
 {
     this.name = name 
     this._pattern = pattern
 }
+for(prop in Pattern.prototype)
+    TagPattern.prototype[prop] = Pattern.prototype[prop];
 
-for(prop in PatternBody)
-    Pattern.prototype[prop] = PatternBody[prop];
+TagPatternBody = {
+    start_tag: function()
+    {
+        return  '<span class="syntax-' + this.name + '" >'; 
+    },
+    end_tag: function()
+    {
+        return  '</span>'; 
+    }, 
+    get: function(content)
+    {
+        return this.start_tag() + this.get_shelf() + this.end_tag();
+    }
+}
+for(prop in TagPatternBody)
+    TagPattern.prototype[prop] = TagPatternBody[prop];
 
 
 function RegionPattern(name,start,end)
@@ -103,7 +121,8 @@ function RegionPattern(name,start,end)
     this.name = name;
     this._pattern = {'start':new Pattern(null,start),'end':new Pattern(null,end)}
 }
-
+for(prop in TagPattern.prototype)
+    RegionPattern.prototype[prop] = TagPattern.prototype[prop];
 
 RegionPatternBody = {
     _match_stage:0,
@@ -116,7 +135,8 @@ RegionPatternBody = {
         {
             case this.NO_MATCH:
             case this._START_MATCHING:
-                return this._is_start_match(c); 
+                var val= this._is_start_match(c); 
+                return val; 
                 break;
             case this._MID_MATCHING:
             case this._END_MATCHING:
@@ -134,10 +154,12 @@ RegionPatternBody = {
                 break;
             case this.MATCHING:
                 this._match_stage = this._START_MATCHING;
+                this._shelf += c;
                 return this.MATCHING;
                 break; 
             case this.MATCH:
                 this._match_stage = this._MID_MATCHING
+                this._shelf += c;
                 return this.MATCHING;
                 break; 
         }
@@ -148,13 +170,16 @@ RegionPatternBody = {
         {
             case this.MATCHING:
                 this._match_stage = this._END_MATCHING
+                this._shelf += c;
                 return this.MATCHING;
                 break; 
             case this.MATCH:
                 this.reset()
+                this._shelf += c;
                 return this.MATCH;
                 break; 
             default:
+                this._shelf += c;
                 return this.MATCHING;
                 break;
         }
@@ -164,10 +189,6 @@ RegionPatternBody = {
         this._match_stage = this.NO_MATCH;
     }
 }    
-
-for(prop in PatternBody)
-    RegionPattern.prototype[prop] = PatternBody[prop];
-
 for(prop in RegionPatternBody)
     RegionPattern.prototype[prop] = RegionPatternBody[prop];
 
@@ -211,13 +232,11 @@ function CompareManager(patterns)
 {
     this.patterns = patterns;
     this.statemanager = new StateManager(this);
-    this._setup_shelves();
 }
 
 CompareManager.prototype = {
-    _shelves:[],// levels of syntax beeing built
     statemanager:{}, 
-    patterns:{},
+    patterns:[],
     run: function(c)
     {
         var values = this._getvalues(c); 
@@ -235,17 +254,13 @@ CompareManager.prototype = {
         switch(this.statemanager.test_match(c, pattern_index))
         {
             case Pattern.prototype.NO_MATCH:
-                var val = this._get_shelf(pattern_index) + c; 
+                var val = this.patterns[pattern_index].get_shelf() + c; 
                 break;
             case Pattern.prototype.MATCHING:
-                var val = this._shelves[pattern_index] += c;
+                var val = c;
                 break;
             case Pattern.prototype.MATCH: 
-                var pattern = this.patterns[pattern_index];
-                var val = '';
-                val += pattern.start_tag();
-                val += this._get_shelf(pattern_index) + c;
-                val += pattern.end_tag();
+                var val = this._handle_match(pattern_index);
                 break;
             default:
                 var val = '';
@@ -253,17 +268,10 @@ CompareManager.prototype = {
         }
         return val; 
     }, 
-    _get_shelf: function(level)
+    _handle_match: function(pattern_index)
     {
-        value = this._shelves[level];
-        this._shelves[level] = '';
-        return value; 
-    }, 
-    _setup_shelves: function()
-    {
-        for(var i = 0 ; i < this.patterns.length; i ++)
-            this._shelves[i] = '';
-    } 
+        return this.patterns[pattern_index].get();
+    }
 }
 
 function StateManager(target)
@@ -331,9 +339,9 @@ StateManager.prototype = {
 
 // ---------------- testing code for Parser --------------------------
 /**/
-var syntax_function = new Pattern('function','function');
-var syntax_for = new Pattern('keyword','for');
-var syntax_is = new Pattern('keyword','is');
+var syntax_function = new TagPattern('function','function');
+var syntax_for = new TagPattern('keyword','for');
+var syntax_is = new TagPattern('keyword','is');
 var regpatt = new RegionPattern('string','"','"');
 print("\n"); 
 parser = new Parser(syntax_function, syntax_for, syntax_is, regpatt); 
@@ -346,7 +354,7 @@ print(parser.parse(test_string));
 // ---------------- testing code for RegionPattern --------------------------
 
 // print('\n\n');
-// var content = " llalalal < fjksldfkj fjdkfj > fjskdlfkjfdks"
+// var content = " llalalal \" fjksldfkj fjdkfj \" fjskdlfkjfdks"
 // print(regpatt); 
 // 
 // for(var i = 0; i < content.length; i ++)
@@ -354,5 +362,13 @@ print(parser.parse(test_string));
 //     c = content[i]; 
 //     print('c:' + c + ' is:' + regpatt.is_match(c));
 // }
-// 
+
+// base = new Pattern(null,'basic');
+
+// var content = 'hi there basic';
+// for(var i = 0; i < content.length; i ++)
+// {
+//     c = content[i]; 
+//     print(base.is_match(c));
+// }
 
