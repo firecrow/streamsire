@@ -1,7 +1,7 @@
 // import syntax_highlight.js up here to run
 
 /* utility functions for debugging */
-
+var ns = window.firecrow;
 
 /* testing the Pattern 
 
@@ -109,10 +109,30 @@ var syntax_string = new window.firecrow.RegionTagPattern(
 
 print("\n"); 
 parser = new window.firecrow.Parser(syntax_function, syntax_for, syntax_is, syntax_string); 
-test_string = 'a function in "\\tthere\\n" for is'; 
+test_string = 'a function in "\\tthere\\n" for isfor'; 
 print(test_string + '\n')
 // print(parser.parse_debug(test_string));
 print(parser.parse_debug(test_string));
 print('--------------------- again -----------------------');
 print(parser.parse_debug(test_string));
+
+/* ---------------- testing patterns with character found twice bug -------------
+ 
+var pattwo = new ns.TagPattern('name','window');
+var pat = new ns.TagPattern('name','rowboat');
+
+//var content = 'firecrow likes to look out the window, like a winrowboat';
+var content = 'firecrow likes to look out the window, like a crowboawin';
+for(var i = 0; i < content.length; i ++)
+{
+    c = content[i]; 
+    print('c:' + c + ' is:' + pat.is_match(c));
+}
+
+var p = new ns.Parser(pat,pattwo);
+print(p.parse_debug(content));
+
+ 
+ */
+
 

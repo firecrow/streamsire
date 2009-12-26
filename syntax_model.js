@@ -32,13 +32,13 @@ if(!window.firecrow) window.firecrow = {};
                 if(this._pattern[this._count] == c)
                 {
                     if(this._count == 0) this._shelf = '';
-                    this._shelf += c;
                     if(this._count == (this._pattern.length -1)) 
                     {
+                        this._add_to_shelf(c);
                         this.reset()
                         return Interface.MATCH;
                     }else{ 
-                        this._count++;
+                        this._add_to_shelf(c);
                         return Interface.MATCHING;
                     }
                 }    
@@ -47,6 +47,11 @@ if(!window.firecrow) window.firecrow = {};
                     this.reset()
                     return Interface.NO_MATCH; 
                 }
+            },
+            _add_to_shelf: function(c)
+            {
+                this._shelf += c;
+                this._count++;
             },
             reset:function()
             {
@@ -103,20 +108,37 @@ if(!window.firecrow) window.firecrow = {};
                 this._value = '';
                 for(var i = 0; i < content.length; i++)  
                     this._value += this.comparemanager.run(content[i]);  
+                
+                this._value += this.comparemanager.clear();
                 return this._value;
             },
             parse_debug: function(content)
             {
                 var debug_val = '';
                 this._value = '';
+                function parse_normal(c)
+                {
+                    val = this.comparemanager.run(content[i]);  
+                    this._value += val;
+                    return val;
+                }
+
+                function debug(c) 
+                {
+                    val = parse_normal.call(this, content[i]); 
+                    debug_val += 'c:' + c + ' process:' + this.comparemanager.statemanager.state + ' value:\'' + val + '\'\n';
+                }
+
                 for(var i = 0; i < content.length; i++)  
                 {
-                    var val = this.comparemanager.run(content[i]);  
-                    debug_val += 'c:' + content[i] + ' process:' + this.comparemanager.statemanager.state + ' value:\'' + val + '\'';
-                    debug_val += '\n'; 
-                    this._value += val;  
+                    debug.call(this, content[i]);
                 }
-                return debug_val + '\n\n' + this._value;
+                
+                val = this.comparemanager.clear();
+                debug_val += '        clear value:\'' + val + '\'\n';
+                this._value += val;
+
+                return debug_val + '\n' + this._value;
             },
             toString: function()
             {
@@ -168,6 +190,10 @@ if(!window.firecrow) window.firecrow = {};
                 }
                 return val; 
             }, 
+            clear: function(c)
+            {
+                return this.statemanager.get_largest_shelf(values);
+            },
             _handle_match: function(pattern_index)
             {
                 return this.patterns[pattern_index].get();
@@ -179,7 +205,7 @@ if(!window.firecrow) window.firecrow = {};
             this._target = target;
             this._init_state(); 
         }
-        StateManager.MATCH_PENDING = 1;
+        StateManager.PENDING = 1;
         StateManager.NOT_PENDING = 0;
         StateManager.prototype = {
             state:0,
@@ -196,19 +222,26 @@ if(!window.firecrow) window.firecrow = {};
                 if(value == this._pattern_states[pattern_index])
                     return;
 
-                this._pattern_states[pattern_index] = value; 
+                this._update_pattern_state(pattern_index, value);
 
                 for(var pi=0; pi < this._target.patterns.length; pi++){
                    if(this._pattern_states[pi] == ns.PatternInterface.MATCHING)
                    {
-                        this.state = StateManager.MATCH_PENDING; 
+                        this.state = StateManager.PENDING; 
                         return;
                    }
                 }
                 this.state = StateManager.NOT_PENDING; 
             }, 
+            _update_pattern_state: function(pattern_index, value)   
+            {
+                this._pattern_states[pattern_index] = value; 
+            }, 
             filter_by_state: function(values)
             {
+                if(this.state == StateManager.PENDING)
+                    return '';
+
                 function get_longest_result(results)
                 {
                     val = ''; 
@@ -218,9 +251,24 @@ if(!window.firecrow) window.firecrow = {};
                     return val;
                 } 
 
-                if(this.state == StateManager.NOT_PENDING)
-                    return get_longest_result(values);
-                return ''; 
+                return get_longest_result(values);
+            },
+            get_largest_shelf: function(values)
+            {
+                if(this.state != StateManager.PENDING)
+                    return '';
+
+                this.state = StateManager.NOT_PENDING; 
+                var values = [];
+                for(var pi=0; pi < this._target.patterns.length; pi++){
+                   if(this._pattern_states[pi] == ns.PatternInterface.MATCHING)
+                   {
+                        values.push(this._target.patterns[pi].get_shelf()); 
+                   }
+                }
+                if(values.length > 0) 
+                    return this.filter_by_state(values);
+                return '';
             },
             _init_state: function()
             {
