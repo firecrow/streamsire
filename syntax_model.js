@@ -100,13 +100,15 @@ if(!window.firecrow) window.firecrow = {};
             },
             parse: function(content) 
             {
+                this._value = '';
                 for(var i = 0; i < content.length; i++)  
                     this._value += this.comparemanager.run(content[i]);  
                 return this._value;
             },
             parse_debug: function(content)
             {
-                var debug_val = ''
+                var debug_val = '';
+                this._value = '';
                 for(var i = 0; i < content.length; i++)  
                 {
                     var val = this.comparemanager.run(content[i]);  

@@ -112,5 +112,7 @@ parser = new window.firecrow.Parser(syntax_function, syntax_for, syntax_is, synt
 test_string = 'a function in "\\tthere\\n" for is'; 
 print(test_string + '\n')
 // print(parser.parse_debug(test_string));
-print(parser.parse(test_string));
+print(parser.parse_debug(test_string));
+print('--------------------- again -----------------------');
+print(parser.parse_debug(test_string));
 
