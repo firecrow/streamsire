@@ -36,10 +36,14 @@ var content = 'hi there';
 var p = new window.firecrow.TagPattern('testwork','he');
 
 var parser = new window.firecrow.Parser(p);
+for(var i = 0; i < content.length; i++)
+{
+    c = content[i];
+    print('c:' + c + ' match:' + p.is_match(c));
+}
 print(parser.parse_debug(content));
 
 */
-
 
 // ---------------- testing code for RegionPattern --------------------------
 /*
@@ -86,6 +90,7 @@ for(var i = 0; i < content.length; i ++)
 
 // ---------------- testing code for Parser and TagPattern and RegionTagPattern --------------------------
 /*
+ */
  
 var syntax_function = new window.firecrow.TagPattern('function','function');
 var syntax_for = new window.firecrow.TagPattern('keyword','for');
@@ -108,5 +113,4 @@ test_string = 'a function in "\\tthere\\n" for is';
 print(test_string + '\n')
 // print(parser.parse_debug(test_string));
 print(parser.parse(test_string));
- */
 

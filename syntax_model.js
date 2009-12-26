@@ -31,6 +31,7 @@ if(!window.firecrow) window.firecrow = {};
             { 
                 if(this._pattern[this._count] == c)
                 {
+                    if(this._count == 0) this._shelf = '';
                     this._shelf += c;
                     if(this._count == (this._pattern.length -1)) 
                     {
