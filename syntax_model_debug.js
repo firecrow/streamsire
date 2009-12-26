@@ -4,7 +4,8 @@
 
 
 /* testing the Pattern 
-var p = new Pattern('he');
+
+var p = new window.firecrow.Pattern('he');
 print(p);
 
 var content = 'hi there';
@@ -17,9 +18,9 @@ for(var i = 0; i < content.length; i++)
 
 /* testing the tag pattern 
 
-var p = new TagPattern('testwork','he');
+var p = new window.firecrow.TagPattern('testwork','he');
 print(p);
-print(p instanceof PatternInterface);
+print(p instanceof window.firecrow.PatternInterface);
 
 var content = 'hi there';
 for(var i = 0; i < content.length; i++)
@@ -27,20 +28,25 @@ for(var i = 0; i < content.length; i++)
     c = content[i];
     print('c:' + c + ' match:' + p.is_match(c));
 }
-
-var parser = new Parser(p);
-print(parser.comparemanager.patterns.length);
-print( parser.comparemanager.statemanager._target.patterns[0] instanceof PatternInterface);
-print( parser.comparemanager.statemanager._target.patterns[0] == p);
-print( parser.comparemanager.statemanager._target.patterns[0]);
-print(parser.parse(content));
 */
 
+/* ------------- checking the parser ----------
+
+var content = 'hi there';
+var p = new window.firecrow.TagPattern('testwork','he');
+
+var parser = new window.firecrow.Parser(p);
+print(parser.parse_debug(content));
+
+*/
 
 
 // ---------------- testing code for RegionPattern --------------------------
 /*
-var syntax_string = new RegionPattern(new Pattern('"'),[new Pattern('\\r')],new Pattern('"'));
+var syntax_string = new window.firecrow.RegionPattern(
+    new window.firecrow.Pattern('"'),
+        [new window.firecrow.Pattern('\\r')],
+            new window.firecrow.Pattern('"'));
 print('\n\n');
 var content = " llalalal \" fjksldfkj fjdkfj \" fjskdlfkjfdks"
 print(syntax_string); 
@@ -52,30 +58,16 @@ for(var i = 0; i < content.length; i ++)
 }
 */
 
-/*
-base = new Pattern(null,'basic');
-
-var content = 'hi there basic';
-for(var i = 0; i < content.length; i ++)
-{
-    c = content[i]; 
-    print(base.is_match(c));
-}
-*/
-
 // ---------------- testing code for RegionTagPattern --------------------------
 /*
-
-*/
-/*
-var nl = new TagPattern('string-escape-n','\\n');
-var ret = new TagPattern('string-escape-r','\\r');
-var tab = new TagPattern('string-escape-t','\\t');
-var syntax_string = new RegionTagPattern(
+var nl = new window.firecrow.TagPattern('string-escape-n','\\n');
+var ret = new window.firecrow.TagPattern('string-escape-r','\\r');
+var tab = new window.firecrow.TagPattern('string-escape-t','\\t');
+var syntax_string = new window.firecrow.RegionTagPattern(
     'string', 
-    new TagPattern('string','"'),
+    new window.firecrow.TagPattern('string','"'),
     [nl,ret,tab],
-    new TagPattern('string','"'));
+    new window.firecrow.TagPattern('string','"'));
 
 print('\n\n');
 var content = " llalalal \" fjksldfkj\\t fjdkfj\\n \" fjskdlfkjfdks"
@@ -92,40 +84,29 @@ for(var i = 0; i < content.length; i ++)
 }
 */
 
-/*
-base = new Pattern('basic');
-
-var content = 'hi there basic';
-for(var i = 0; i < content.length; i ++)
-{
-    c = content[i]; 
-    print(base.is_match(c));
-}
-*/
 // ---------------- testing code for Parser and TagPattern and RegionTagPattern --------------------------
 /*
- */
  
-var syntax_function = new TagPattern('function','function');
-var syntax_for = new TagPattern('keyword','for');
-var syntax_is = new TagPattern('keyword','is');
+var syntax_function = new window.firecrow.TagPattern('function','function');
+var syntax_for = new window.firecrow.TagPattern('keyword','for');
+var syntax_is = new window.firecrow.TagPattern('keyword','is');
 
-var start = new TagPattern('start','"');
-var nl = new TagPattern('string-escape-n','\\n');
-var ret = new TagPattern('string-escape-r','\\r');
-var tab = new TagPattern('string-escape-t','\\t');
-var end = new TagPattern('end','"');
-var syntax_string = new RegionTagPattern(
+var start = new window.firecrow.TagPattern('start','"');
+var nl = new window.firecrow.TagPattern('string-escape-n','\\n');
+var ret = new window.firecrow.TagPattern('string-escape-r','\\r');
+var tab = new window.firecrow.TagPattern('string-escape-t','\\t');
+var end = new window.firecrow.TagPattern('end','"');
+var syntax_string = new window.firecrow.RegionTagPattern(
     'string', 
     start,
     [nl,ret,tab], 
     end);
 
 print("\n"); 
-parser = new Parser(syntax_function, syntax_for, syntax_is, syntax_string); 
+parser = new window.firecrow.Parser(syntax_function, syntax_for, syntax_is, syntax_string); 
 test_string = 'a function in "\\tthere\\n" for is'; 
 print(test_string + '\n')
 // print(parser.parse_debug(test_string));
 print(parser.parse(test_string));
-
+ */
 
