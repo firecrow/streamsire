@@ -1,6 +1,6 @@
 if(typeof window == 'undefined') window = {}; // for command line testing
 if(!window.firecrow) window.firecrow = {};
-(function(namespace){// pattern
+(function(ns){// pattern
 
     function copyprops(to, from)
     { 
@@ -9,10 +9,10 @@ if(!window.firecrow) window.firecrow = {};
     }
 
     var Interface = function(){};
+        Interface.NO_MATCH = 0;
+        Interface.MATCHING = 1;
+        Interface.MATCH = 2;
         Interface.prototype = {
-            NO_MATCH: 0, 
-            MATCHING: 1,
-            MATCH: 2,
             _pattern: null,
             _count: 0, 
             _shelf: '',
@@ -36,16 +36,16 @@ if(!window.firecrow) window.firecrow = {};
                     if(this._count == (this._pattern.length -1)) 
                     {
                         this.reset()
-                        return this.MATCH;
+                        return Interface.MATCH;
                     }else{ 
                         this._count++;
-                        return this.MATCHING;
+                        return Interface.MATCHING;
                     }
                 }    
                 else
                 {
                     this.reset()
-                    return this.NO_MATCH; 
+                    return Interface.NO_MATCH; 
                 }
             },
             reset:function()
@@ -73,14 +73,14 @@ if(!window.firecrow) window.firecrow = {};
 
         Pattern.prototype = new Interface;
 
-    copyprops(namespace, {'PatternInterface':Interface, 'Pattern':Pattern});
+    copyprops(ns, {'PatternInterface':Interface, 'Pattern':Pattern});
 
 })(window.firecrow); 
 
-(function(namespace){// parser 
+(function(ns){// parser 
     
-    if(!namespace.PatternInterface)
-        throw new Error('parser namespace: depends on "PatternInterface", not found in "namespace"');
+    if(!ns.PatternInterface)
+        throw new Error('parser namespace: depends on "PatternInterface", not found in "ns"');
     
     function copyprops(to, from)
     { 
@@ -151,13 +151,13 @@ if(!window.firecrow) window.firecrow = {};
             {
                 switch(this.statemanager.test_match(c, pattern_index))
                 {
-                    case namespace.PatternInterface.prototype.NO_MATCH:
+                    case ns.PatternInterface.NO_MATCH:
                         var val = this.patterns[pattern_index].get_shelf() + c; 
                         break;
-                    case namespace.PatternInterface.prototype.MATCHING:
+                    case ns.PatternInterface.MATCHING:
                         var val = c;
                         break;
-                    case namespace.PatternInterface.prototype.MATCH: 
+                    case ns.PatternInterface.MATCH: 
                         var val = this._handle_match(pattern_index);
                         break;
                     default:
@@ -177,9 +177,9 @@ if(!window.firecrow) window.firecrow = {};
             this._target = target;
             this._init_state(); 
         }
+        StateManager.MATCH_PENDING = 1;
+        StateManager.NOT_PENDING = 0;
         StateManager.prototype = {
-            MATCH_PENDING:1,
-            NOT_PENDING:0,
             state:0,
             _target:{},
             _pattern_states:[],
@@ -197,13 +197,13 @@ if(!window.firecrow) window.firecrow = {};
                 this._pattern_states[pattern_index] = value; 
 
                 for(var pi=0; pi < this._target.patterns.length; pi++){
-                   if(this._pattern_states[pi] == namespace.PatternInterface.prototype.MATCHING)
+                   if(this._pattern_states[pi] == ns.PatternInterface.MATCHING)
                    {
-                        this.state = this.MATCH_PENDING; 
+                        this.state = StateManager.MATCH_PENDING; 
                         return;
                    }
                 }
-                this.state = this.NOT_PENDING; 
+                this.state = StateManager.NOT_PENDING; 
             }, 
             filter_by_state: function(values)
             {
@@ -216,14 +216,14 @@ if(!window.firecrow) window.firecrow = {};
                     return val;
                 } 
 
-                if(this.state == this.NOT_PENDING)
+                if(this.state == StateManager.NOT_PENDING)
                     return get_longest_result(values);
                 return ''; 
             },
             _init_state: function()
             {
                 for(var pi=0; pi < this._target.patterns.length; pi++)
-                    this._pattern_states[pi] = namespace.PatternInterface.prototype.NO_MATCH;
+                    this._pattern_states[pi] = ns.PatternInterface.NO_MATCH;
             },
             _show_states_debug: function()
             {
@@ -232,7 +232,7 @@ if(!window.firecrow) window.firecrow = {};
             }
         }
 
-    copyprops(namespace, 
+    copyprops(ns, 
             {'ParserInterface':Interface, 'Parser':Parser, 
             'ParserCompareManager':CompareManager, 
             'ParserStateManager':StateManager});
@@ -240,10 +240,10 @@ if(!window.firecrow) window.firecrow = {};
 })(window.firecrow); // pass namespace in here
 
 
-(function(namespace){//  region patterns
+(function(ns){//  region patterns
 
-    if(!(namespace.PatternInterface && namespace.ParserInterface))
-        throw new Error('region patterns namespace: depends on "PatternInterface" and "ParserInterface", not found in "namespace"');
+    if(!(ns.PatternInterface && ns.ParserInterface))
+        throw new Error('region patterns namespace: depends on "PatternInterface" and "ParserInterface", not found in "ns"');
     
     function copyprops(to, from)
     { 
@@ -259,7 +259,7 @@ if(!window.firecrow) window.firecrow = {};
             usage: 'RegionPatternOverlay(PatternInterface start, Array(PatternInterface, ...) or null mid_patterns, PatternInterface end)', 
             _validate_pattern: function(name, pattern)
             {
-                if(!(pattern instanceof namespace.PatternInterface)) 
+                if(!(pattern instanceof ns.PatternInterface)) 
                     throw new Error(
                         'RegionPatternOverlay.init: "' + name + '" must be intanceof "PatternInterface" or subclass, '
                         +     'see RegionPatternOverlay.usage for help');
@@ -277,8 +277,8 @@ if(!window.firecrow) window.firecrow = {};
                 this._validate_init_region(start, mid_patterns, end);
                 if(mid_patterns && mid_patterns.constructor == Array)
                 {
-                    var mid_parser = new namespace.Parser();
-                    namespace.Parser.apply(mid_parser, mid_patterns);
+                    var mid_parser = new ns.Parser();
+                    ns.Parser.apply(mid_parser, mid_patterns);
                 }
                 else
                     var mid_parser = null; 
@@ -288,34 +288,34 @@ if(!window.firecrow) window.firecrow = {};
             {
                 switch(this._match_stage)
                 {
-                    case this.NO_MATCH:
-                    case this._START_MATCHING:
+                    case ns.PatternInterface.NO_MATCH:
+                    case Overlay._START_MATCHING:
                         var val= this._is_start_match(c); 
                         return val; 
                         break;
-                    case this._MID_MATCHING:
-                    case this._END_MATCHING:
+                    case Overlay._MID_MATCHING:
+                    case Overlay._END_MATCHING:
                         return this._is_end_match(c); 
                         break;
                 }
-                return this.NO_MATCH;
+                return ns.PatternInterface.NO_MATCH;
             }, 
             _is_start_match: function(c)
             {
                 switch(this._pattern.start.is_match(c))
                 {
-                    case this.NO_MATCH:
-                        return this.NO_MATCH;
+                    case ns.PatternInterface.NO_MATCH:
+                        return ns.PatternInterface.NO_MATCH;
                         break;
-                    case this.MATCHING:
-                        this._match_stage = this._START_MATCHING;
+                    case ns.PatternInterface.MATCHING:
+                        this._match_stage = Overlay._START_MATCHING;
                         this._shelf += c;
-                        return this.MATCHING;
+                        return ns.PatternInterface.MATCHING;
                         break; 
-                    case this.MATCH:
-                        this._match_stage = this._MID_MATCHING
+                    case ns.PatternInterface.MATCH:
+                        this._match_stage = Overlay._MID_MATCHING
                         this._shelf += c;
-                        return this.MATCHING;
+                        return ns.PatternInterface.MATCHING;
                         break; 
                 }
             },
@@ -323,19 +323,19 @@ if(!window.firecrow) window.firecrow = {};
             {
                 switch(this._pattern.end.is_match(c))
                 {
-                    case this.MATCHING:
-                        this._match_stage = this._END_MATCHING
+                    case ns.PatternInterface.MATCHING:
+                        this._match_stage = Overlay._END_MATCHING
                         this._shelf += c;
-                        return this.MATCHING;
+                        return ns.PatternInterface.MATCHING;
                         break; 
-                    case this.MATCH:
+                    case  ns.PatternInterface.MATCH:
                         this.reset()
                         this._shelf += c;
-                        return this.MATCH;
+                        return ns.PatternInterface.MATCH;
                         break; 
                     default:
                         this._is_mid_match(c);
-                        return this.MATCHING;
+                        return ns.PatternInterface.MATCHING;
                         break;
                 }
             }, 
@@ -346,25 +346,25 @@ if(!window.firecrow) window.firecrow = {};
             }, 
             reset: function()
             {
-                this._match_stage = this.NO_MATCH;
+                this._match_stage = ns.PatternInterface.NO_MATCH;
             }
         }
 
     var RegionPattern = function(start, mid_patterns, end)
             this.init_region(start, mid_patterns, end);
 
-        RegionPattern.prototype = new namespace.PatternInterface;
+        RegionPattern.prototype = new ns.PatternInterface;
         copyprops(RegionPattern.prototype, Overlay);
     
-    copyprops(namespace, {'RegionPatternOverlay':Overlay, 'RegionPattern':RegionPattern}); 
+    copyprops(ns, {'RegionPatternOverlay':Overlay, 'RegionPattern':RegionPattern}); 
 
 })(window.firecrow); // pass namespace in here
 
 
-(function(namespace){// tag pattern and tag region pattern 
+(function(ns){// tag pattern and tag region pattern 
 
-    if(!(namespace.PatternInterface && namespace.RegionPatternOverlay))
-        throw new Error('tag_patterns: depends on "patterns", and "parser", no found in "namespace"');
+    if(!(ns.PatternInterface && ns.RegionPatternOverlay))
+        throw new Error('tag_patterns: depends on "patterns", and "parser", no found in "ns"');
 
     function copyprops(to, from)
     { 
@@ -373,7 +373,7 @@ if(!window.firecrow) window.firecrow = {};
     }
 
     var Interface = function(){};
-        Interface.prototype = new namespace.PatternInterface;
+        Interface.prototype = new ns.PatternInterface;
         copyprops(
             Interface.prototype, {
                 name:'',
@@ -419,9 +419,9 @@ if(!window.firecrow) window.firecrow = {};
             this.init_region(start, mid_patterns, end);
         } 
         RegionTagPattern.prototype = new Interface;
-        copyprops(RegionTagPattern.prototype, namespace.RegionPatternOverlay);
+        copyprops(RegionTagPattern.prototype, ns.RegionPatternOverlay);
 
-    copyprops(namespace, {'TagPatternInterface':Interface, 'TagPattern':TagPattern, 'RegionTagPattern':RegionTagPattern}); 
+    copyprops(ns, {'TagPatternInterface':Interface, 'TagPattern':TagPattern, 'RegionTagPattern':RegionTagPattern}); 
 
 })(window.firecrow); // pass namespace in here 
 
