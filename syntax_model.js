@@ -377,7 +377,7 @@ if(!window.firecrow) window.firecrow = {};
         copyprops(
             Interface.prototype, {
                 name:'',
-                usage: 'TagPattern(String name, String pattern)',
+                usage: 'TagPattern(String css-class-name, String pattern)',
                 _validate_string: function(name, str)
                 {
                     if(!(typeof str == 'string')) 
@@ -390,7 +390,7 @@ if(!window.firecrow) window.firecrow = {};
                 }, 
                 start_tag: function()
                 {
-                    return  '<span class="syntax-' + this.name + '" >'; 
+                    return  '<span class="' + this.name + '" >'; 
                 },
                 end_tag: function()
                 {
