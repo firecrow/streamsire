@@ -31,21 +31,20 @@ if(!window.firecrow) window.firecrow = {};
             { 
                 if(this._pattern[this._count] == c)
                 {
-                    if(this._count == 0) this._shelf = '';
+                    if(this._count == 0) this._get_shelf();
                     if(this._count == (this._pattern.length -1)) 
                     {
-                        this._add_to_shelf(c);
                         this.reset()
-                        return Interface.MATCH;
+                        return [Interface.MATCH, this.get(this._get_shelf() + c)];
                     }else{ 
                         this._add_to_shelf(c);
-                        return Interface.MATCHING;
+                        return [Interface.MATCHING, ''];
                     }
                 }    
                 else
                 {
                     this.reset()
-                    return Interface.NO_MATCH; 
+                    return [Interface.NO_MATCH, this._get_shelf() + c]; 
                 }
             },
             _add_to_shelf: function(c)
@@ -57,15 +56,15 @@ if(!window.firecrow) window.firecrow = {};
             {
                 this._count = 0; 
             },
-            get_shelf: function()
+            _get_shelf: function()
             {
                 var val = this._shelf;
                 this._shelf = ''; 
                 return val; 
             }, 
-            get: function()
-            {
-                this.get_shelf();
+            get: function(content)
+            { 
+                return content;
             }, 
             toString: function()
             {
@@ -161,42 +160,25 @@ if(!window.firecrow) window.firecrow = {};
             patterns:[],
             run: function(c)
             {
-                var values = this._getvalues(c); 
-                return this.statemanager.filter_by_state(values);
+                return this._getvalue(c); 
             },
-            _getvalues: function(c)
+            _getvalue: function(c)
             {
-                values = []
+                values = []; 
                 for(var pi = 0; pi < this.patterns.length; pi++)
                     values.push(this._evaluate_pattern(c,pi));
-                return values;
+                return this.statemanager.filter_by_state(values);
             },
             _evaluate_pattern: function(c, pattern_index) 
             {
-                switch(this.statemanager.test_match(c, pattern_index))
-                {
-                    case ns.PatternInterface.NO_MATCH:
-                        var val = this.patterns[pattern_index].get_shelf() + c; 
-                        break;
-                    case ns.PatternInterface.MATCHING:
-                        var val = c;
-                        break;
-                    case ns.PatternInterface.MATCH: 
-                        var val = this._handle_match(pattern_index);
-                        break;
-                    default:
-                        var val = '';
-                        break; 
-                }
-                return val; 
+                // result = [status, content]
+                var result = this.patterns[pattern_index].is_match(c); 
+                this.statemanager.update_state(pattern_index, result[0])
+                return result[1];
             }, 
             clear: function(c)
             {
                 return this.statemanager.get_largest_shelf(values);
-            },
-            _handle_match: function(pattern_index)
-            {
-                return this.patterns[pattern_index].get();
             }
         }
 
@@ -211,13 +193,7 @@ if(!window.firecrow) window.firecrow = {};
             state:0,
             _target:{},
             _pattern_states:[],
-            test_match: function(c,pi)
-            {
-                 match_value = this._target.patterns[pi].is_match(c); 
-                 this._update_state(pi, match_value); 
-                 return match_value;
-            },
-            _update_state: function(pattern_index, value)
+            update_state: function(pattern_index, value)
             {
                 if(value == this._pattern_states[pattern_index])
                     return;
@@ -237,21 +213,24 @@ if(!window.firecrow) window.firecrow = {};
             {
                 this._pattern_states[pattern_index] = value; 
             }, 
+            _get_longest_result: function(values)
+            {
+                var longest = ''; 
+                for(var i=0; i < values.length; i++)
+                {
+                    (function(value){
+                        if (value.length > longest.length)
+                            longest = value;
+                        })(values[i]);
+                }
+                return longest;
+            }, 
             filter_by_state: function(values)
             {
                 if(this.state == StateManager.PENDING)
                     return '';
 
-                function get_longest_result(results)
-                {
-                    val = ''; 
-                    for(var i=0; i < results.length; i++)
-                        if (values[i].length > val.length)
-                            val = values[i];
-                    return val;
-                } 
-
-                return get_longest_result(values);
+                return this._get_longest_result(values);
             },
             get_largest_shelf: function(values)
             {
@@ -263,7 +242,7 @@ if(!window.firecrow) window.firecrow = {};
                 for(var pi=0; pi < this._target.patterns.length; pi++){
                    if(this._pattern_states[pi] == ns.PatternInterface.MATCHING)
                    {
-                        values.push(this._target.patterns[pi].get_shelf()); 
+                        values.push(this._target.patterns[pi]._get_shelf()); 
                    }
                 }
                 if(values.length > 0) 
@@ -352,40 +331,44 @@ if(!window.firecrow) window.firecrow = {};
             }, 
             _is_start_match: function(c)
             {
-                switch(this._pattern.start.is_match(c))
+                // result = [statuscode, content]
+                var result = this._pattern.start.is_match(c);
+                switch(result[0])
                 {
                     case ns.PatternInterface.NO_MATCH:
-                        return ns.PatternInterface.NO_MATCH;
+                        return [ns.PatternInterface.NO_MATCH, c];
                         break;
                     case ns.PatternInterface.MATCHING:
                         this._match_stage = Overlay._START_MATCHING;
                         this._shelf += c;
-                        return ns.PatternInterface.MATCHING;
+                        return [ns.PatternInterface.MATCHING, ''];
                         break; 
                     case ns.PatternInterface.MATCH:
-                        this._match_stage = Overlay._MID_MATCHING
+                        this._match_stage = Overlay._MID_MATCHING;
                         this._shelf += c;
-                        return ns.PatternInterface.MATCHING;
+                        return [ns.PatternInterface.MATCHING, ''];
                         break; 
                 }
             },
             _is_end_match: function(c)
             {
-                switch(this._pattern.end.is_match(c))
+                // result = [statuscode, content]
+                var result = this._pattern.end.is_match(c)
+                switch(result[0])
                 {
                     case ns.PatternInterface.MATCHING:
                         this._match_stage = Overlay._END_MATCHING
                         this._shelf += c;
-                        return ns.PatternInterface.MATCHING;
+                        return [ns.PatternInterface.MATCHING,''];
                         break; 
                     case  ns.PatternInterface.MATCH:
                         this.reset()
                         this._shelf += c;
-                        return ns.PatternInterface.MATCH;
+                        return [ns.PatternInterface.MATCH, this.get(this._get_shelf() + c)];
                         break; 
                     default:
                         this._is_mid_match(c);
-                        return ns.PatternInterface.MATCHING;
+                        return [ns.PatternInterface.MATCHING, ''];
                         break;
                 }
             }, 
@@ -448,7 +431,7 @@ if(!window.firecrow) window.firecrow = {};
                 }, 
                 get: function(content)
                 {
-                    return this.start_tag() + this.get_shelf() + this.end_tag();
+                    return this.start_tag() + content + this.end_tag();
                 }, 
                 toString: function()
                 {

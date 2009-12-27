@@ -32,18 +32,13 @@ for(var i = 0; i < content.length; i++)
 
 /* ------------- checking the parser ----------
 
-var content = 'hi there';
-var p = new window.firecrow.TagPattern('testwork','he');
+var content = 'hi there nice day';
+var p = new window.firecrow.TagPattern('testwork','nice');
 
 var parser = new window.firecrow.Parser(p);
-for(var i = 0; i < content.length; i++)
-{
-    c = content[i];
-    print('c:' + c + ' match:' + p.is_match(c));
-}
 print(parser.parse_debug(content));
-
 */
+
 
 // ---------------- testing code for RegionPattern --------------------------
 /*
@@ -109,12 +104,12 @@ var syntax_string = new window.firecrow.RegionTagPattern(
 
 print("\n"); 
 parser = new window.firecrow.Parser(syntax_function, syntax_for, syntax_is, syntax_string); 
-test_string = 'a function in "\\tthere\\n" for isfor'; 
+test_string = 'a function in "\\tthere\\n" for ifor'; 
 print(test_string + '\n')
 // print(parser.parse_debug(test_string));
 print(parser.parse_debug(test_string));
-print('--------------------- again -----------------------');
-print(parser.parse_debug(test_string));
+
+
 
 /* ---------------- testing patterns with character found twice bug -------------
  
