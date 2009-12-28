@@ -85,7 +85,6 @@ for(var i = 0; i < content.length; i ++)
 
 // ---------------- testing code for Parser and TagPattern and RegionTagPattern --------------------------
 /*
- */
  
 var syntax_function = new window.firecrow.TagPattern('function','function');
 var syntax_for = new window.firecrow.TagPattern('keyword','for');
@@ -95,21 +94,44 @@ var start = new window.firecrow.TagPattern('start','"');
 var nl = new window.firecrow.TagPattern('string-escape-n','\\n');
 var ret = new window.firecrow.TagPattern('string-escape-r','\\r');
 var tab = new window.firecrow.TagPattern('string-escape-t','\\t');
+var nil = new window.firecrow.TagPattern('string-escape-t','\\0');
 var end = new window.firecrow.TagPattern('end','"');
 var syntax_string = new window.firecrow.RegionTagPattern(
     'string', 
     start,
-    [nl,ret,tab], 
+    [nl,ret,tab,nil], 
     end);
 
 print("\n"); 
 parser = new window.firecrow.Parser(syntax_function, syntax_for, syntax_is, syntax_string); 
 test_string = 'a function in "\\tthere\\n" for ifor'; 
 print(test_string + '\n')
-// print(parser.parse_debug(test_string));
 print(parser.parse_debug(test_string));
+// print(parser.parse(test_string));
+ */
+
+// ---------------- simple set testing code for Parser and TagPattern and RegionTagPattern --------------------------
+/*
+ 
+var syntax_for = new window.firecrow.TagPattern('keyword','for');
+var syntax_is = new window.firecrow.TagPattern('keyword','is');
+test_string = 'c is for "\\tcookie\\n"'; 
+parser = new window.firecrow.Parser(syntax_for, syntax_is); 
 
 
+//--- slightly more complex set
+var syntax_for = new window.firecrow.TagPattern('keyword','for');
+var syntax_is = new window.firecrow.TagPattern('keyword','is');
+var syntax_function = new window.firecrow.TagPattern('keyword','function');
+var syntax_window = new window.firecrow.TagPattern('keyword','window');
+test_string = 'c is for "\\tcookie\\n" and function firecrow'; 
+parser = new window.firecrow.Parser(syntax_for, syntax_is, syntax_function, syntax_window); 
+
+print("\n"); 
+print(test_string + '\n')
+print(parser.parse_debug(test_string));
+// print(parser.parse(test_string));
+ */
 
 /* ---------------- testing patterns with character found twice bug -------------
  
@@ -130,4 +152,17 @@ print(p.parse_debug(content));
  
  */
 
+
+var content = 'function(){\n' 
++   '\n'
++   '  var val = "hi \\n"\n'
++   '\n'
++   '})(window.firecrow);\n';
+
+
+var pattwo = new ns.TagPattern('name',')');
+var pat = new ns.TagPattern('name','window');
+var p = new ns.Parser(pat,pattwo);
+// print(p.parse_debug(content));
+print(p.parse(content));
 

@@ -13,9 +13,6 @@ if(!window.firecrow) window.firecrow = {};
         Interface.MATCHING = 1;
         Interface.MATCH = 2;
         Interface.prototype = {
-            _pattern: null,
-            _count: 0, 
-            _shelf: '',
             usage:'PatternInterface(String pattern)',
             _validate_string: function(name, str)
             {
@@ -26,25 +23,28 @@ if(!window.firecrow) window.firecrow = {};
             {
                 this._validate_string('pattern', pattern);
                 this._pattern = pattern
+                this._count = 0; 
+                this._shelf = '';
             }, 
             is_match: function(c)
             { 
                 if(this._pattern[this._count] == c)
                 {
-                    if(this._count == 0) this._get_shelf();
                     if(this._count == (this._pattern.length -1)) 
                     {
                         this.reset()
-                        return [Interface.MATCH, this.get(this._get_shelf() + c)];
+                        var val = this._get_shelf() + c;
+                        return [Interface.MATCH, this.handle(val), val.length];
                     }else{ 
                         this._add_to_shelf(c);
-                        return [Interface.MATCHING, ''];
+                        return [Interface.MATCHING, '', 0];
                     }
                 }    
                 else
                 {
                     this.reset()
-                    return [Interface.NO_MATCH, this._get_shelf() + c]; 
+                    var val = this._get_shelf() + c; 
+                    return [Interface.NO_MATCH, val, val.length]; 
                 }
             },
             _add_to_shelf: function(c)
@@ -62,7 +62,7 @@ if(!window.firecrow) window.firecrow = {};
                 this._shelf = ''; 
                 return val; 
             }, 
-            get: function(content)
+            handle: function(content)
             { 
                 return content;
             }, 
@@ -113,6 +113,31 @@ if(!window.firecrow) window.firecrow = {};
             },
             parse_debug: function(content)
             {
+                function plot_shelves(stack, patterns, padding)
+                {
+                    var content = '';
+                    for(var i=0; i<stack.length; i++)
+                    {
+                        if(typeof patterns[stack[i]]._pattern == 'string')
+                            content += padding + patterns[stack[i]]._pattern + ':' + patterns[stack[i]]._shelf + '\n';
+                        else if(typeof patterns[stack[i]]._pattern == 'object'){ 
+                            content += padding + 'region shelf:' + patterns[stack[i]]._shelf + '\n';
+                            content += run_plot_shelves(patterns[stack[i]]._pattern.mid,'        ')
+                        }
+                        else if(typeof patterns[stack[i]]._pattern == 'undefined')
+                            content += padding + 'stack[' + i + '] not found \n';
+                            
+                    }
+                    return content;
+                }
+
+                function run_plot_shelves(parser, padding)
+                {
+                    var stack = parser.comparemanager.statemanager._pending_stack; 
+                    var patterns = parser.comparemanager.patterns;
+                    return plot_shelves(stack, patterns,padding);
+                }
+                
                 var debug_val = '';
                 this._value = '';
                 function parse_normal(c)
@@ -125,7 +150,8 @@ if(!window.firecrow) window.firecrow = {};
                 function debug(c) 
                 {
                     val = parse_normal.call(this, content[i]); 
-                    debug_val += 'c:' + c + ' process:' + this.comparemanager.statemanager.state + ' value:\'' + val + '\'\n';
+                    debug_val += 'c:' + c + ' :\'' + val + '\'\n'
+                    +   run_plot_shelves(this,'    ');
                 }
 
                 for(var i = 0; i < content.length; i++)  
@@ -134,7 +160,7 @@ if(!window.firecrow) window.firecrow = {};
                 }
                 
                 val = this.comparemanager.clear();
-                debug_val += '        clear value:\'' + val + '\'\n';
+                debug_val += 'clear value:\'' + val + '\'\n';
                 this._value += val;
 
                 return debug_val + '\n' + this._value;
@@ -146,7 +172,9 @@ if(!window.firecrow) window.firecrow = {};
         }
 
     var Parser = function() // usage: Parser(pattern,[pattern,[...]])
-        this.init_parser.apply(this, arguments); 
+        {
+            this.init_parser.apply(this, arguments); 
+        }
 
         Parser.prototype = new Interface;
 
@@ -156,51 +184,114 @@ if(!window.firecrow) window.firecrow = {};
             this.statemanager = new StateManager(this);
         }
         CompareManager.prototype = {
-            statemanager:{}, 
-            patterns:[],
             run: function(c)
             {
-                return this._getvalue(c); 
+                var result = this._getvalue(c); 
+                return result[1];
             },
             _getvalue: function(c)
             {
-                values = []; 
+                var val = c;
+                var res;
+                var values = [];
                 for(var pi = 0; pi < this.patterns.length; pi++)
-                    values.push(this._evaluate_pattern(c,pi));
-                return this.statemanager.filter_by_state(values);
-            },
+                    values.push(this._evaluate_pattern(c, pi));
+                 
+                var result = this.statemanager.value_by_state(values, c);  // c not needed in for debugging
+                return result;
+            }, 
+            _get_longest: function(arr)
+            {
+                var val = '';
+                for(var i = 0; i<arr.length ;i++)
+                {
+                    if(arr[i] == -1) return false; // blank if any patterns are mid process 
+                    else if(arr[i].length > val.length) val = arr[i];
+                }
+                return val;
+            }, 
             _evaluate_pattern: function(c, pattern_index) 
             {
-                // result = [status, content]
+                // result = [status,content]
                 var result = this.patterns[pattern_index].is_match(c); 
-                this.statemanager.update_state(pattern_index, result[0])
-                return result[1];
+                this.statemanager.register_pattern_state(pattern_index, result); 
+                return result; 
             }, 
             clear: function(c)
             {
-                return this.statemanager.get_largest_shelf(values);
+                return this.statemanager.get_shelf();
             }
         }
 
     var StateManager = function(target)
         {
+            this.init_states();
             this._target = target;
             this._init_state(); 
         }
-        StateManager.PENDING = 1;
         StateManager.NOT_PENDING = 0;
+        StateManager.PENDING = 1;
+        StateManager.NEW_PENDING = 2;
         StateManager.prototype = {
-            state:0,
-            _target:{},
-            _pattern_states:[],
-            update_state: function(pattern_index, value)
+            init_states: function()
             {
-                if(value == this._pattern_states[pattern_index])
+                this.state = 0;
+                this._target= {};
+                this._pending_stack = [];
+                this._pattern_states = [];
+                this._new_content = [];
+            },
+            register_pattern_state: function(pattern_index, result)
+            {
+                // result = [statuscode, content]
+                if(this._pattern_states[pattern_index] == result[0])
                     return;
 
-                this._update_pattern_state(pattern_index, value);
-
-                for(var pi=0; pi < this._target.patterns.length; pi++){
+                this._pattern_states[pattern_index] = result[0];
+                this._to_pending_stack(pattern_index, result);
+            },
+            _to_pending_stack: function(pattern_index, result)
+            {
+                // compare to leading pattern
+                if(this._pending_stack[0] != undefined && pattern_index == this._pending_stack[0]) 
+                {
+                    if(result[0] == ns.PatternInterface.NO_MATCH || result[0] == ns.PatternInterface.MATCH)
+                    {
+                        this._pending_stack.shift();
+                        this._new_content.push(result);
+                    }
+                // or add/remove froms stack 
+                }else{ 
+                    if(result[0] == ns.PatternInterface.MATCHING)
+                    {
+                        this._pending_stack.push(pattern_index); 
+                    }
+                    else if(result[0] == ns.PatternInterface.NO_MATCH || result[0] == ns.PatternInterface.MATCH)
+                    {
+                        this._del_from_pending_stack(pattern_index);
+                    }
+                }
+            }, 
+            _del_from_pending_stack: function(pattern_index)
+            {
+                var index = this._pending_stack.indexOf(pattern_index); 
+                if(index != -1)
+                    this._pending_stack.splice(index, 1); 
+            }, 
+            _get_longest_result: function(results)
+            {
+                // result object is [statuscode, content]
+                var res = [null,''];
+                for(var i=0; i<results.length; i++)
+                    if(results[i][1].length > res[1].length)
+                        res = results[i];
+                return res;
+            },
+            _servey: function()
+            {
+                // will eventually switch over to serveying pending stack
+                for(var pi=0; pi < this._target.patterns.length; pi++)
+                {
                    if(this._pattern_states[pi] == ns.PatternInterface.MATCHING)
                    {
                         this.state = StateManager.PENDING; 
@@ -209,58 +300,62 @@ if(!window.firecrow) window.firecrow = {};
                 }
                 this.state = StateManager.NOT_PENDING; 
             }, 
-            _update_pattern_state: function(pattern_index, value)   
+            _less_pending: function(result)
             {
-                this._pattern_states[pattern_index] = value; 
-            }, 
-            _get_longest_result: function(values)
-            {
-                var longest = ''; 
-                for(var i=0; i < values.length; i++)
-                {
-                    (function(value){
-                        if (value.length > longest.length)
-                            longest = value;
-                        })(values[i]);
-                }
-                return longest;
-            }, 
-            filter_by_state: function(values)
-            {
-                if(this.state == StateManager.PENDING)
-                    return '';
-
-                return this._get_longest_result(values);
+                var pending = this._target.patterns[this._pending_stack[0]];
+                var val = result[1].substring(0, result[1].length-pending._shelf.length);
+                return [result[0], val, val.length];
             },
-            get_largest_shelf: function(values)
+            value_by_state: function(results, c)
             {
-                if(this.state != StateManager.PENDING)
-                    return '';
-
-                this.state = StateManager.NOT_PENDING; 
-                var values = [];
-                for(var pi=0; pi < this._target.patterns.length; pi++){
-                   if(this._pattern_states[pi] == ns.PatternInterface.MATCHING)
-                   {
-                        values.push(this._target.patterns[pi]._get_shelf()); 
-                   }
+                this._servey();
+                if(this.state == StateManager.PENDING)
+                {
+                    if(this._new_content.length > 0)
+                    {
+                        var result = this._new_content.pop(); 
+                        
+                        var val = this._less_pending(result); 
+                        this._new_content = [];
+                        return val; 
+                    }
+                        
+                    this._new_content = [];
+                    return [null,'', 0];// blank result object 
                 }
-                if(values.length > 0) 
-                    return this.filter_by_state(values);
+                
+                if(this._new_content.length > 0 && this._pending_stack.length == 0)
+                {
+                    // append the previous content
+                    var back_result = this._new_content.pop();
+                    this._new_content = [];
+                    var front_result = this._get_longest_result(results);
+                    // account for front_res as possible match
+                    if(back_result[1] != front_result[1])// temporary fix, should make sure 
+                                                         // completed patterns not in new_content 
+                                                         // as a long term fix
+                    { 
+                        var val = back_result[1].substring(0, back_result[1].length - front_result[2]) + front_result[1];
+                        return [front_result[0], val, val.length];
+                    }
+                }
+                 
+                this._new_content = [];
+                return this._get_longest_result(results);
+            },
+            get_shelf: function()
+            {
+                if(this._pending_stack.length > 0)
+                    return this._target.patterns[this._pending_stack[0]]._get_shelf();
                 return '';
             },
             _init_state: function()
             {
                 for(var pi=0; pi < this._target.patterns.length; pi++)
                     this._pattern_states[pi] = ns.PatternInterface.NO_MATCH;
-            },
-            _show_states_debug: function()
-            {
-                for(var pi=0; pi < this._target.patterns.length; pi++)
-                    print('pi:' + pi + ' state:' + this._pattern_states[pi]);
             }
         }
-
+        
     copyprops(ns, 
             {'ParserInterface':Interface, 'Parser':Parser, 
             'ParserCompareManager':CompareManager, 
@@ -304,7 +399,7 @@ if(!window.firecrow) window.firecrow = {};
             init_region: function(start,mid_patterns,end)
             {
                 this._validate_init_region(start, mid_patterns, end);
-                if(mid_patterns && mid_patterns.constructor == Array)
+                if(mid_patterns && mid_patterns.constructor == Array && mid_patterns.length > 0)
                 {
                     var mid_parser = new ns.Parser();
                     ns.Parser.apply(mid_parser, mid_patterns);
@@ -319,8 +414,7 @@ if(!window.firecrow) window.firecrow = {};
                 {
                     case ns.PatternInterface.NO_MATCH:
                     case Overlay._START_MATCHING:
-                        var val= this._is_start_match(c); 
-                        return val; 
+                        return this._is_start_match(c); 
                         break;
                     case Overlay._MID_MATCHING:
                     case Overlay._END_MATCHING:
@@ -336,17 +430,18 @@ if(!window.firecrow) window.firecrow = {};
                 switch(result[0])
                 {
                     case ns.PatternInterface.NO_MATCH:
-                        return [ns.PatternInterface.NO_MATCH, c];
+                        var val = this._get_shelf() + c; 
+                        return [ns.PatternInterface.NO_MATCH, val, val.length];
                         break;
                     case ns.PatternInterface.MATCHING:
                         this._match_stage = Overlay._START_MATCHING;
                         this._shelf += c;
-                        return [ns.PatternInterface.MATCHING, ''];
+                        return [ns.PatternInterface.MATCHING, '', 0];
                         break; 
                     case ns.PatternInterface.MATCH:
                         this._match_stage = Overlay._MID_MATCHING;
                         this._shelf += c;
-                        return [ns.PatternInterface.MATCHING, ''];
+                        return [ns.PatternInterface.MATCHING, '', 0];
                         break; 
                 }
             },
@@ -359,16 +454,16 @@ if(!window.firecrow) window.firecrow = {};
                     case ns.PatternInterface.MATCHING:
                         this._match_stage = Overlay._END_MATCHING
                         this._shelf += c;
-                        return [ns.PatternInterface.MATCHING,''];
+                        return [ns.PatternInterface.MATCHING, '', 0];
                         break; 
                     case  ns.PatternInterface.MATCH:
                         this.reset()
-                        this._shelf += c;
-                        return [ns.PatternInterface.MATCH, this.get(this._get_shelf() + c)];
+                        var val = this._get_shelf() + c; 
+                        return [ns.PatternInterface.MATCH, this.handle(val), val.length];
                         break; 
                     default:
                         this._is_mid_match(c);
-                        return [ns.PatternInterface.MATCHING, ''];
+                        return [ns.PatternInterface.MATCHING, '', 0];
                         break;
                 }
             }, 
@@ -380,6 +475,10 @@ if(!window.firecrow) window.firecrow = {};
             reset: function()
             {
                 this._match_stage = ns.PatternInterface.NO_MATCH;
+            },
+            toString: function()
+            {
+                return '[object RegionPattern]';
             }
         }
 
@@ -429,7 +528,7 @@ if(!window.firecrow) window.firecrow = {};
                 {
                     return  '</span>'; 
                 }, 
-                get: function(content)
+                handle: function(content)
                 {
                     return this.start_tag() + content + this.end_tag();
                 }, 
