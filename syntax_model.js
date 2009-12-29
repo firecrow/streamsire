@@ -32,8 +32,8 @@ if(!window.firecrow) window.firecrow = {};
                 {
                     if(this._count == (this._pattern.length -1)) 
                     {
-                        this.reset()
-                        var val = this._get_shelf() + c;
+                        this._add_to_shelf(c);
+                        var val = this._get_shelf();
                         return [Interface.MATCH, this.handle(val), val.length];
                     }else{ 
                         this._add_to_shelf(c);
@@ -42,8 +42,8 @@ if(!window.firecrow) window.firecrow = {};
                 }    
                 else
                 {
-                    this.reset()
-                    var val = this._get_shelf() + c; 
+                    this._add_to_shelf(c);
+                    var val = this._get_shelf(); 
                     return [Interface.NO_MATCH, val, val.length]; 
                 }
             },
@@ -52,7 +52,7 @@ if(!window.firecrow) window.firecrow = {};
                 this._shelf += c;
                 this._count++;
             },
-            reset:function()
+            _reset:function()
             {
                 this._count = 0; 
             },
@@ -60,6 +60,7 @@ if(!window.firecrow) window.firecrow = {};
             {
                 var val = this._shelf;
                 this._shelf = ''; 
+                this._reset();
                 return val; 
             }, 
             handle: function(content)
@@ -205,7 +206,7 @@ if(!window.firecrow) window.firecrow = {};
                 var val = '';
                 for(var i = 0; i<arr.length ;i++)
                 {
-                    if(arr[i] == -1) return false; // blank if any patterns are mid process 
+                    if(arr[i] == -1) return false; // blank if any patterns are mid process  // deprecated I believe!
                     else if(arr[i].length > val.length) val = arr[i];
                 }
                 return val;
@@ -398,6 +399,7 @@ if(!window.firecrow) window.firecrow = {};
             },
             init_region: function(start,mid_patterns,end)
             {
+                this._shelf = '';
                 this._validate_init_region(start, mid_patterns, end);
                 if(mid_patterns && mid_patterns.constructor == Array && mid_patterns.length > 0)
                 {
@@ -430,7 +432,8 @@ if(!window.firecrow) window.firecrow = {};
                 switch(result[0])
                 {
                     case ns.PatternInterface.NO_MATCH:
-                        var val = this._get_shelf() + c; 
+                        this._shelf += c;
+                        var val = this._get_shelf(); 
                         return [ns.PatternInterface.NO_MATCH, val, val.length];
                         break;
                     case ns.PatternInterface.MATCHING:

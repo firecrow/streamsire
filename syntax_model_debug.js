@@ -85,6 +85,7 @@ for(var i = 0; i < content.length; i ++)
 
 // ---------------- testing code for Parser and TagPattern and RegionTagPattern --------------------------
 /*
+ */
  
 var syntax_function = new window.firecrow.TagPattern('function','function');
 var syntax_for = new window.firecrow.TagPattern('keyword','for');
@@ -108,7 +109,6 @@ test_string = 'a function in "\\tthere\\n" for ifor';
 print(test_string + '\n')
 print(parser.parse_debug(test_string));
 // print(parser.parse(test_string));
- */
 
 // ---------------- simple set testing code for Parser and TagPattern and RegionTagPattern --------------------------
 /*
@@ -150,7 +150,6 @@ var p = new ns.Parser(pat,pattwo);
 print(p.parse_debug(content));
 
  
- */
 
 
 var content = 'function(){\n' 
@@ -166,3 +165,4 @@ var p = new ns.Parser(pat,pattwo);
 // print(p.parse_debug(content));
 print(p.parse(content));
 
+ */

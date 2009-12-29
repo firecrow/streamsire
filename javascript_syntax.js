@@ -21,8 +21,8 @@ if(!window.firecrow) window.firecrow = {};
         return results;
     }
     
-    add_patterns('syntax-basic',['var','{','}','[',']','.',';']); 
-    add_patterns('syntax-reserved',['function','for','window','[',']','.']); 
+    add_patterns('syntax-basic',['var','{','}','[',']','.',';','this','']); 
+    add_patterns('syntax-reserved',['function','for','window','[',']','.','=','+','!=','-','/']); 
     add_patterns('syntax-standout',['(',')']); 
     
     var syntax_string_quote = new ns.RegionTagPattern(
