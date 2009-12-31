@@ -137,7 +137,7 @@ if(!window.firecrow) window.firecrow = {};
                 
                 function run_plot_shelves(parser, padding)
                 {
-                    var stack = parser.comparemanager.statemanager._pending_stack; 
+                    var stack = parser.comparemanager.pendingstack.stack; 
                     var patterns = parser.comparemanager.patterns;
                     return plot_shelves(stack, patterns,padding);
                 }
@@ -152,21 +152,12 @@ if(!window.firecrow) window.firecrow = {};
                     return '' + values;
                 }
 
-                function plot_content_stack()
-                {
-                    var values = [];
-                    var new_content = this.comparemanager.statemanager._content_stack;;
-                    for(var i = 0; i < new_content.length; i++)
-                        values.push(new_content[i]._pattern  + ':\'' + new_content[i].value + '\'');
-                         
-                    return '' + values;
-                }
                 
                 var debug_val = '';
                 this._value = '';
                 function parse_normal(c)
                 {
-                    this.comparemanager.run(c);  
+                    this.comparemanager.run_debug(c);  
                     //print('c:' + c + '|' +  StateManager.status_codes[this.comparemanager.statemanager.state]);// debug
                     return this.comparemanager._round_val;
                 }
@@ -175,9 +166,7 @@ if(!window.firecrow) window.firecrow = {};
                 {
                     val = parse_normal.call(this, content[i]); 
                     return 'c:' + c + ' :\'' + val + '\'\n'
-                    +   plot_values.call(this) + '\n' 
-                    +   plot_content_stack.call(this) + '\n' 
-                    +   run_plot_shelves(this,'    ');
+                    + 'plot shelves:\n' +   run_plot_shelves(this,'    ');
                 }
 
                 for(var i = 0; i < content.length; i++)  
@@ -211,26 +200,57 @@ if(!window.firecrow) window.firecrow = {};
             this.statemanager = new StateManager(this);
             this.value = '';
             this._char = '';
+            this.pendingstack = new PendingStack();
         }
         CompareManager.prototype = {
-            run: function(c)
+            run_debug:function()
             {
                 this._char = c;
                 for(var pi = 0; pi < this.patterns.length; pi++)
                     this._evaluate_pattern(c, pi);
                 
-                this._round_val = this.statemanager.value_by_state() || '';
+                print(this.pendingstack._debug.call(this.pendingstack));
+                print(this.pendingstack.contentstack._debug.call(this.pendingstack.contentstack));
+
+                this._round_val = this._get_value() || '';
+                this.value += this._round_val; 
+            }, 
+            run: function(c)
+            {
+                this._char = c;
+                for(var pi = 0; pi < this.patterns.length; pi++)
+                    this._evaluate_pattern(c, pi);
+
+                this._round_val = this._get_value() || '';
                 this.value += this._round_val; 
             },
+            run_debug:function(c)
+            {
+                this._char = c;
+                for(var pi = 0; pi < this.patterns.length; pi++)
+                    this._evaluate_pattern(c, pi);
+                
+                print(this.pendingstack._debug.call(this.pendingstack));
+                print(this.pendingstack.contentstack._debug.call(this.pendingstack.contentstack));
+
+                this._round_val = this._get_value() || '';
+                this.value += this._round_val; 
+            }, 
             _evaluate_pattern: function(c, pattern_index) 
             {
                 var pattern = this.patterns[pattern_index];
                 pattern.increment(c);
                 this.statemanager.register(pattern_index, pattern); 
             }, 
+            _get_value: function()
+            {
+                var state = this.statemanager.state;
+                this.statemanager.reset();
+                return this.pendingstack.contentstack.get(state, this._char); // this._char planned to be removed
+            },
             clear: function(c)
             {
-                this.value += this.statemanager.get_shelf();
+                this.value += this.pendingstack._get_shelf();
             }
         }
 
@@ -249,110 +269,21 @@ if(!window.firecrow) window.firecrow = {};
             {
                 this.state = 0;
                 this._target= {};
-                this._pending_stack = [];
                 this._pattern_states = [];
-                this._content_stack = [];
             },
-            value_by_state: function()
-            {
-                var pattern = this._content_stack[0] || {'state':ns.PatternInterface.NO_MATCH, 'value': this._target._char};
-                var back_pattern = this._get_back_pattern(pattern); 
-                this.handle_if_match(pattern); 
-                 
-                 print('value_by_state: pattern: ' + pattern._pattern + ':' + pattern.value  
-                    + ' back_pattern: ' + back_pattern._pattern + ':' + back_pattern.value);  
-
-                var state = this.state;
-                this.reset();
-                if(state == StateManager.PENDING)
-                { 
-                    if(back_pattern)
-                        return back_pattern.value;
-                    else
-                        return '';
-                }
-                else if(back_pattern)
-                {
-                    return back_pattern.value + pattern.value;
-                }else{ 
-                    return pattern.value;
-                }
-            },
-            handle_if_match: function(pattern)
-            {
-                if(pattern.state == ns.PatternInterface.MATCH)
-                    pattern.handle();
-                return pattern;
-            }, 
-            _get_back_pattern: function(pending)
-            {
-                if(this._content_stack.length > 0)
-                {
-                    var pattern = this._content_stack.pop(); 
-                    if(pattern == pending) // this is a quickfix, underlying condition should be eliminated
-                        return false;
-                    this._less_value(pattern, pending);
-                    return pattern;
-                }
-                return false;
-            }, 
             register: function(pattern_index, pattern)
             {
-
                 if(pattern.state == ns.PatternInterface.MATCHING ) this.state = StateManager.PENDING; 
                 if(this._pattern_states[pattern_index] != pattern.state)
                 {
                     this._pattern_states[pattern_index] = pattern.state; 
-                    this._to_pending_stack(pattern_index, pattern);
+                    this._target.pendingstack.evaluate(pattern);
                 }
             },
-            _to_pending_stack: function(pattern_index, pattern)
-            {
-                // compare to leading pattern
-                if(this._pending_stack[0] != undefined && this._pending_stack[0] == pattern)
-                {
-                    if(pattern.state == ns.PatternInterface.NO_MATCH)
-                    {
-                        this._pending_stack.shift();
-                        this._content_stack.push(pattern);
-                    }
-                    if(pattern.state == ns.PatternInterface.MATCH)
-                    {
-                        this._pending_stack.shift();
-                        this._content_stack.unshift(pattern);
-                    }
-                // or add/remove froms stack 
-                }else{
-                    if(pattern.state == ns.PatternInterface.MATCHING)
-                        this._pending_stack.push(pattern); 
-                    else if(pattern.state == ns.PatternInterface.NO_MATCH || pattern.state == ns.PatternInterface.MATCH)
-                        this._del_from_pending_stack(pattern);
-                        this._content_stack.push(pattern);
-                }
-            }, 
-            _del_from_pending_stack: function(pattern)
-            {
-                var index = this._pending_stack.indexOf(pattern); 
-                if(index != -1)
-                    this._pending_stack.splice(index, 1); 
-            }, 
             reset: function()
             {
-                this._content_stack = [];
                 this.state = StateManager.NOT_PENDING; 
             }, 
-            _less_value: function(pattern, pending)
-            {
-                var pending_length = pending._shelf.length || pending.value.length;
-                pattern.value = pattern.value.substring(0, pattern.value.length - pending_length); 
-                return pending;
-            },
-            get_shelf: function()
-            {
-                if(this._pending_stack.length > 0)
-                    return this._pending_stack[0]._get_shelf();
-                return '';
-            },
             set: function(state)
             {
                 this.state = state;
@@ -364,6 +295,113 @@ if(!window.firecrow) window.firecrow = {};
             }
         }
         
+    var PendingStack = function()
+        {
+            this.init_pending_stack();
+        }
+        PendingStack.prototype = {
+            init_pending_stack: function()
+            {
+                this.stack = [];
+                this.contentstack = new ContentStack(this);
+            }, 
+            remove: function(pattern) // formerly del
+            {
+                var index = this.stack.indexOf(pattern); 
+                if(index != -1)
+                    this.stack.splice(index, 1); 
+            },
+            evaluate: function(pattern) // formerly to_pending_stack
+            {
+                if(pattern.state == ns.PatternInterface.MATCHING)
+                {
+                    this.stack.push(pattern); 
+                }else{
+                    this.remove(pattern);
+                    this.contentstack.add(pattern);
+                }
+            }, 
+            lead: function()
+            {
+                return this.stack[0] || null;
+            },
+            _debug: function(state,def) 
+            { 
+                var values = [];    
+                for(var i = 0; i < this.stack.length; i++)
+                    values.push('    ' + this.stack[i]._pattern  + ':\'' + this.stack[i]._shelf + '\'');
+                     
+                return 'pending stack: \n' + values.join('\n') + '\n'; 
+            }, 
+            _get_shelf: function()
+            {
+                if(this.stack.length > 0)
+                    return this.stack[0]._get_shelf();
+                return '';
+            },
+        }
+
+    var ContentStack = function(pending)
+        {
+           this.init_content_stack(pending); 
+        }
+        ContentStack.prototype = {
+            init_content_stack: function(pending)
+            {
+                this.stack = [];
+                this._pending = pending; 
+                this._mask_len = 0;
+            }, 
+            add: function(pattern) 
+            {
+                if(pattern.state == ns.PatternInterface.MATCH)
+                    this.stack.unshift(pattern);
+                else
+                    this.stack.push(pattern);
+            },
+            lead: function()
+            {
+                return this.stack[0] || null;
+            },
+            _debug: function(state,def) 
+            { 
+                var values = [];    
+                for(var i = 0; i < this.stack.length; i++)
+                    values.push('    ' + this.stack[i]._pattern  + ':\'' + this.stack[i].value + '\'');
+                     
+                return 'content stack: \n' + values.join('\n') + '\n'; 
+            }, 
+            get: function(state, c) 
+            {
+                this._mask_len = 0;
+                var value = '';
+                if(state == StateManager.PENDING) 
+                    this._mask_len = this._pending.lead()._shelf.length; 
+
+                while(this.stack.length > 0) 
+                {
+                    var pattern = this.stack.shift(); 
+                    this._less_mask(pattern);
+                    this._handle_if_match(pattern);
+                    value += pattern.value; 
+                }
+                if(state == StateManager.PENDING)
+                    return value;
+                return value || c;
+            }, 
+            _less_mask: function(pattern) 
+            {
+                pattern.value = pattern.value.substring(0, pattern.value.length - this._mask_len); 
+                if(pattern.value.length > this._mask_len) this._mask_len = pattern.value.length;
+            }, 
+            _handle_if_match: function(pattern)
+            {
+                if(pattern.state == ns.PatternInterface.MATCH)
+                    pattern.handle();
+                return pattern;
+            }, 
+        }
+
     copyprops(ns, 
             {'ParserInterface':Interface, 'Parser':Parser, 
             'ParserCompareManager':CompareManager, 
@@ -457,7 +495,6 @@ if(!window.firecrow) window.firecrow = {};
             },
             _is_end_match: function(c)
             {
-                print('is end match called');
                 // result = [statuscode, content]
                 this._pattern.end.increment(c); 
                 switch(this._pattern.end.state)
