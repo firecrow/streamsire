@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" lang="en-US">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title></title>
+        <script src="syntax_model.js"></script>
+        <script src="javascript_syntax.js"></script>
+        <script>
+            // <!--
+                // alert('hi there');
+            // -->
+            var ns = window.firecrow;
+
+            var log;
+            function print(msg)
+            {
+                log.innerHTML += msg + '\n';
+            }
+            function clearlog()
+            {
+                log.innerHTML += '';
+            }
+
+            var stage;
+            var inp;
+            function update()
+            {
+                clearlog();
+                stage.innerHTML = ns.JSHighlighter.parse_debug(inp.value);
+            }
+            
+            window.onload = function()
+            {
+                log = document.getElementById('log');
+                inp = document.getElementsByTagName('TEXTAREA')[0];
+                inp.onchange = update; 
+
+                var all_div = document.getElementsByTagName('PRE'); 
+                for( var i = 0; i < all_div.length; i++)
+                {
+                    if(all_div[i].className && all_div[i].className == 'stage')
+                    {
+                        stage = all_div[i];
+                        break;
+                    }
+                }
+            }
+        </script>
+        <style>
+            * {margin: 0px; padding: 0px; border: none;}
+            .stage-container {
+                width:600px; 
+                margin: 20px auto; 
+            }
+            textarea {
+                float:left;
+                width: 298px;
+                height: 300px;
+                border: 1px solid rgb(0,0,0)
+            }
+            .stage { 
+                 float: right;
+                 width: 278px;
+                 height: 280px;
+                 border-style:solid;
+                 border-color:rgb(0,0,0);
+                 border-width: 1px 1px 1px 0px;
+                 background-color: rgb(0,0,0);
+                 color: rgb(255,255,255);
+                 padding: 10px;
+            }
+            .stage span {font-size: 14px; font-family: monospace;}
+            .syntax-reserved { color: rgb(150,150,150);  }
+            .syntax-basic { color: rgb(100,100,100);  font-size: 14px;}
+            .syntax-standout { color: rgb(150,150,150); font-weight: bold; font-size: 14px; }
+            .syntax-string { color: rgb(150,150,150); font-weight: bold; font-size: 14px; }
+            .syntax-string-escape { color: rgb(100,100,100); font-weight: normal; font-size: 14px; }
+            #log {clear:both;}
+        </style>
+	</head>
+<body>
+
+<div class="stage-container">
+    <textarea rows="10" cols="40"></textarea>
+    <pre class="stage"></pre> 
+</div>
+<pre id="log">
+?
+</pre>
+
+</body>
+</html>

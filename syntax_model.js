@@ -280,7 +280,7 @@ if(!window.firecrow) window.firecrow = {};
             register: function(pattern_index, pattern)
             {
                 if(pattern.state == ns.PatternInterface.MATCHING ) this.state = StateManager.PENDING; 
-                if(this._pattern_states[pattern_index] != pattern.state)
+                if(this._pattern_states[pattern_index] != pattern.state || pattern.state == ns.PatternInterface.MATCH)
                 {
                     this._pattern_states[pattern_index] = pattern.state; 
                     this._target.pendingstack.evaluate(pattern);
