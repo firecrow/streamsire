@@ -109,10 +109,11 @@ if(!window.firecrow) window.firecrow = {};
             },
             parse: function(content) 
             {
+                this.comparemanager.clear();
                 for(var i = 0; i < content.length; i++)  
                     this.comparemanager.run(content[i]); 
                 
-                this.comparemanager.clear();
+                this.comparemanager.conclude();
                 return this.comparemanager.value || '';
             },
             parse_debug: function(content)
@@ -169,6 +170,7 @@ if(!window.firecrow) window.firecrow = {};
                     + 'plot shelves:\n' +   run_plot_shelves(this,'    ');
                 }
 
+                this.comparemanager.clear();
                 for(var i = 0; i < content.length; i++)  
                 {
                     var val = debug.call(this, content[i]);
@@ -176,7 +178,7 @@ if(!window.firecrow) window.firecrow = {};
                     print(val);
                 }
                 
-                this.comparemanager.clear();
+                this.comparemanager.conclude();
 
                 // print(debug_val);
                 return this.comparemanager.value || '';
@@ -248,9 +250,13 @@ if(!window.firecrow) window.firecrow = {};
                 this.statemanager.reset();
                 return this.pendingstack.contentstack.get(state, this._char); // this._char planned to be removed
             },
-            clear: function(c)
+            conclude: function(c)
             {
                 this.value += this.pendingstack._get_shelf();
+            },
+            clear: function()
+            {
+                this.value = '';
             }
         }
 
@@ -383,7 +389,7 @@ if(!window.firecrow) window.firecrow = {};
                     var pattern = this.stack.shift(); 
                     this._less_mask(pattern);
                     this._handle_if_match(pattern);
-                    value += pattern.value; 
+                    value = pattern.value + value; 
                 }
                 if(state == StateManager.PENDING)
                     return value;
