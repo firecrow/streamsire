@@ -12,7 +12,8 @@ var content = 'hi there';
 for(var i = 0; i < content.length; i++)
 {
     c = content[i];
-    print('c:' + c + ' match:' + p.is_match(c));
+    p.increment(c)
+    print('c:' + c + ' state:' + ns.PatternInterface.status_codes[p.state] + ' value: ' + p.value );
 }
 */
 
@@ -26,17 +27,20 @@ var content = 'hi there';
 for(var i = 0; i < content.length; i++)
 {
     c = content[i];
-    print('c:' + c + ' match:' + p.is_match(c));
-}
+    p.increment(c)
+    print('c:' + c + ' state:' + ns.PatternInterface.status_codes[p.state] + ' value: ' + p.value );
+
 */
 
 /* ------------- checking the parser ----------
 
 var content = 'hi there nice day';
+print(content);
 var p = new window.firecrow.TagPattern('testwork','nice');
 
 var parser = new window.firecrow.Parser(p);
-print(parser.parse_debug(content));
+//print(parser.parse_debug(content));
+print(parser.parse(content));
 */
 
 
@@ -109,6 +113,19 @@ test_string = 'a function in "\\tthere\\n" for ifor';
 print(test_string + '\n')
 print(parser.parse_debug(test_string));
 // print(parser.parse(test_string));
+
+
+/* ------ syntax string test ------- 
+var nl = new window.firecrow.TagPattern('string-escape-n','\\n');
+var ret = new window.firecrow.TagPattern('string-escape-r','\\r');
+var tab = new window.firecrow.TagPattern('string-escape-t','\\t');
+var nil = new window.firecrow.TagPattern('string-escape-0','\\0');
+
+test_string = '\\tthere\\n'; 
+parser = new window.firecrow.Parser(nl,ret,tab,nil); 
+print(parser.parse_debug(test_string));
+ */
+
 
 // ---------------- simple set testing code for Parser and TagPattern and RegionTagPattern --------------------------
 /*
