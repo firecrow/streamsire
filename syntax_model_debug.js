@@ -92,7 +92,7 @@ for(var i = 0; i < content.length; i ++)
  */
  
 var syntax_function = new window.firecrow.TagPattern('function','function');
-var syntax_for = new window.firecrow.TagPattern('keyword','for');
+var syntax_for = new window.firecrow.TagWordPattern('keyword','for');
 var syntax_is = new window.firecrow.TagPattern('keyword','is');
 
 var start = new window.firecrow.TagPattern('start','"');
@@ -109,10 +109,10 @@ var syntax_string = new window.firecrow.RegionTagPattern(
 
 print("\n"); 
 parser = new window.firecrow.Parser(syntax_function, syntax_for, syntax_is, syntax_string); 
-test_string = 'a function in "\\tthere\\n" for ifor'; 
+test_string = 'a function in "\\tthere\\n" for ifor for_'; 
 print(test_string + '\n')
-// print(parser.parse_debug(test_string));
-print(parser.parse(test_string));
+print(parser.parse_debug(test_string));
+//print(parser.parse(test_string));
 
 
 /* ------ syntax string test ------- 
@@ -181,5 +181,36 @@ var pat = new ns.TagPattern('name','window');
 var p = new ns.Parser(pat,pattwo);
 // print(p.parse_debug(content));
 print(p.parse(content));
+ */
+
+/* ------------------------- testing tag word pattern ----------------------------
+
+var p = new ns.TagWordPattern('key','hello');
+
+var content = 'hello hello hellothere hihello hello';
+var val = '';
+function process()
+{
+    print('c:' + c + ' state:' + ns.PatternInterface.status_codes[p.state] + ' value: \'' + p.value + '\'');
+    if(p.state == ns.PatternInterface.MATCH)
+    {
+        p.handle(); 
+        val += p.value; 
+    }
+    else if(p.state == ns.PatternInterface.NO_MATCH) 
+    {
+        val += p.value; 
+    }
+}
+for(var i = 0; i < content.length; i++)
+{
+    c = content[i];
+    p.increment(c); 
+    process();
+}
+p.conclude();
+process();
+
+print(val);
 
  */

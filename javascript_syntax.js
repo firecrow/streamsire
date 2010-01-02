@@ -13,6 +13,12 @@ if(!window.firecrow) window.firecrow = {};
             patterns.push(new ns.TagPattern(name, patterns_arg[prop]));
     }
 
+    add_word_patterns = function(name, patterns_arg)
+    {
+        for(prop in patterns_arg)
+            patterns.push(new ns.TagWordPattern(name, patterns_arg[prop]));
+    }
+
     make_patterns = function(name, patterns_arg)
     {
         var results = [];
@@ -21,8 +27,10 @@ if(!window.firecrow) window.firecrow = {};
         return results;
     }
     
-    add_patterns('syntax-basic',['var','{','}','[',']','.',';','this','']); 
-    add_patterns('syntax-reserved',['function','for','window','[',']','.','=','+','!=','-','/']); 
+    add_word_patterns('syntax-basic',['var','this']); 
+    add_word_patterns('syntax-reserved',['function','for','window']); 
+    add_patterns('syntax-basic',['{','}','[',']','.',';','']); 
+    add_patterns('syntax-reserved',['[',']','.','=','+','!=','-','/']); 
     add_patterns('syntax-standout',['(',')']); 
     
     var syntax_string_quote = new ns.RegionTagPattern(
