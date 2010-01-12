@@ -4,12 +4,14 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<title></title>
-        <script src="syntax_model.js"></script>
-        <script src="javascript_syntax.js"></script>
+        <!-- these module scripts would probably be joined into one script for deployment -->
+        <script src="../pattern.js"></script>
+        <script src="../parser.js"></script>
+        <script src="../region.js"></script>
+        <script src="../tagpattern.js"></script>
+        <script src="../syntax/javascript_syntax.js"></script>
         <script>
-            // <!--
-                // alert('hi there');
-            // -->
+            //<!--
             var ns = window.firecrow;
 
             var log;
@@ -46,6 +48,7 @@
                     }
                 }
             }
+            //-->
         </script>
         <style>
             * {margin: 0px; padding: 0px; border: none;}
