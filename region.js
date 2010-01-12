@@ -1,4 +1,4 @@
-if(typeof window == 'undefined') window = {}; // for command line testing
+if(!window) window = {}; // for command line testing
 if(!window.firecrow) window.firecrow = {};
 
 (function(ns){//  region patterns
@@ -129,8 +129,7 @@ if(!window.firecrow) window.firecrow = {};
             }
         }
 
-    var RegionPattern = function(start, mid_patterns, end)
-            this.init_region(start, mid_patterns, end);
+    var RegionPattern = function(start, mid_patterns, end){ this.init_region(start, mid_patterns, end); }
 
         RegionPattern.prototype = new ns.PatternInterface;
         copyprops(RegionPattern.prototype, Overlay);

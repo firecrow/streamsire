@@ -1,4 +1,4 @@
-if(typeof window == 'undefined') window = {}; // for command line testing
+if(!window) window = {}; // for command line testing
 if(!window.firecrow) window.firecrow = {};
 (function(ns){// pattern
 
@@ -31,7 +31,7 @@ if(!window.firecrow) window.firecrow = {};
             }, 
             increment: function(c)
             { 
-                if(this._pattern[this._count] == c)
+                if(this._pattern.charAt(this._count) == c)
                 {
                     if(this._count == (this._pattern.length -1)) 
                     {
@@ -88,8 +88,7 @@ if(!window.firecrow) window.firecrow = {};
             }
         }
 
-    var Pattern = function(pattern)
-        this.init_pattern(pattern);
+    var Pattern = function(pattern){   this.init_pattern(pattern);   }
 
         Pattern.prototype = new Interface;
 

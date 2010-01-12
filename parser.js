@@ -1,4 +1,4 @@
-if(typeof window == 'undefined') window = {}; // for command line testing
+if(!window) window = {}; // for command line testing
 if(!window.firecrow) window.firecrow = {};
 
 (function(ns){// parser 
@@ -28,7 +28,7 @@ if(!window.firecrow) window.firecrow = {};
             {
                 this.comparemanager.reset();
                 for(var i = 0; i < content.length; i++)  
-                    this.comparemanager.run(content[i]); 
+                    this.comparemanager.run(content.charAt(i)); 
                 
                 this.comparemanager.conclude();
                 return this.comparemanager.value || '';
@@ -81,7 +81,7 @@ if(!window.firecrow) window.firecrow = {};
 
                 function debug(c) 
                 {
-                    val = parse_normal.call(this, content[i]); 
+                    val = parse_normal.call(this, c); 
                     return 'c:' + c + ' :\'' + val + '\'\n'
                     'plot shelves:\n' +   run_plot_shelves(this,'    ');
                 }
@@ -89,7 +89,7 @@ if(!window.firecrow) window.firecrow = {};
                 this.comparemanager.reset();
                 for(var i = 0; i < content.length; i++)  
                 {
-                    var val = debug.call(this, content[i]);
+                    var val = debug.call(this, content.charAt(i));
                     // debug_val += val;
                     print(val);
                 }
@@ -236,7 +236,16 @@ if(!window.firecrow) window.firecrow = {};
             }, 
             remove: function(pattern) // formerly del
             {
-                var index = this.stack.indexOf(pattern); 
+                function indexById()
+                {
+                  for(var i = 0; i < this.stack.length; i++){
+                    if(pattern == this.stack[i])
+                      return i;
+                  }
+                  return -1;
+                }
+                //var index = this.stack.indexOf(pattern); 
+                var index = indexById.call(this);
                 if(index != -1)
                     this.stack.splice(index, 1); 
             },
@@ -341,7 +350,7 @@ if(!window.firecrow) window.firecrow = {};
                 if(pattern.state == ns.PatternInterface.MATCH)
                     pattern.handle();
                 return pattern;
-            }, 
+            } 
         }
 
     copyprops(ns, 
