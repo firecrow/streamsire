@@ -78,6 +78,13 @@ if(!window.firecrow) window.firecrow = {};
                 if(this.state == Interface.MATCHING)
                     this.state = Interface.NO_MATCH;
                 this.value = this._get_shelf(); 
+            }, 
+            reset: function()
+            {
+                this.state = Interface.NO_MATCH;
+                this.value = '';
+                this._shelf = '';
+                this._count = 0;
             }
         }
 

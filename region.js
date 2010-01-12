@@ -123,8 +123,8 @@ if(!window.firecrow) window.firecrow = {};
             }, 
             conclude: function()
             {
-                if(this.state == Interface.MATCHING)
-                    this.state = Interface.MATCH;
+                if(this.state == ns.PatternInterface.MATCHING)
+                    this.state = ns.PatternInterface.MATCH;
                 this.value = this._get_shelf(); 
             }
         }

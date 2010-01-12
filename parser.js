@@ -26,7 +26,7 @@ if(!window.firecrow) window.firecrow = {};
             },
             parse: function(content) 
             {
-                this.comparemanager.clear();
+                this.comparemanager.reset();
                 for(var i = 0; i < content.length; i++)  
                     this.comparemanager.run(content[i]); 
                 
@@ -76,7 +76,6 @@ if(!window.firecrow) window.firecrow = {};
                 function parse_normal(c)
                 {
                     this.comparemanager.run_debug(c);  
-                    //print('c:' + c + '|' +  StateManager.status_codes[this.comparemanager.statemanager.state]);// debug
                     return this.comparemanager._round_val;
                 }
 
@@ -84,10 +83,10 @@ if(!window.firecrow) window.firecrow = {};
                 {
                     val = parse_normal.call(this, content[i]); 
                     return 'c:' + c + ' :\'' + val + '\'\n'
-                    + 'plot shelves:\n' +   run_plot_shelves(this,'    ');
+                    'plot shelves:\n' +   run_plot_shelves(this,'    ');
                 }
 
-                this.comparemanager.clear();
+                this.comparemanager.reset();
                 for(var i = 0; i < content.length; i++)  
                 {
                     var val = debug.call(this, content[i]);
@@ -160,9 +159,12 @@ if(!window.firecrow) window.firecrow = {};
             {
                 this.value += this.pendingstack.conclude();
             },
-            clear: function()
+            reset: function()
             {
                 this.value = '';
+                for(var i=0; i< this.patterns.length; i++)
+                    this.patterns[i].reset();
+                this.statemanager.state = StateManager.NOT_PENDING;
             },
             add_pattern: function(pattern)
             {
@@ -313,8 +315,11 @@ if(!window.firecrow) window.firecrow = {};
                 this._mask_len = 0;
                 var value = '';
                 if(state == StateManager.PENDING) 
-                    this._mask_len = this._pending.lead()._shelf.length; 
-
+                {
+                    var lead = this._pending.lead()
+                    if(lead)
+                        this._mask_len = lead._shelf.length;
+                }
                 while(this.stack.length > 0) 
                 {
                     var pattern = this.stack.shift(); 
