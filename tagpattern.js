@@ -68,9 +68,7 @@ if(!window.firecrow) window.firecrow = {};
             this.init_pattern(pattern);
             this._prev_char = '';
             this._before_subexp = /\W/;
-            this._before_subexp.compile('\\W');
             this._after_subexp = /\W/;
-            this._after_subexp.compile('\\W');
         }
         TagWordPattern.prototype = new Interface;
         TagWordPattern.prototype._increment = ns.PatternInterface.prototype.increment;
