@@ -164,6 +164,8 @@ if(!window.firecrow) window.firecrow = {};
                 this.value = '';
                 for(var i=0; i< this.patterns.length; i++)
                     this.patterns[i].reset();
+                      
+                this.statemanager.clear();
                 this.statemanager.state = StateManager.NOT_PENDING;
             },
             add_pattern: function(pattern)
@@ -221,6 +223,10 @@ if(!window.firecrow) window.firecrow = {};
             {
                 for(var pi=0; pi < this._target.patterns.length; pi++)
                     this._pattern_states[pi] = ns.PatternInterface.NO_MATCH;
+            },
+            clear: function()
+            {
+                this._pattern_states = [];
             }
         }
         
@@ -249,12 +255,14 @@ if(!window.firecrow) window.firecrow = {};
                 if(index != -1)
                     this.stack.splice(index, 1); 
             },
-            evaluate: function(pattern) // formerly to_pending_stack
+            evaluate: function(pattern) 
             {
                 if(pattern.state == ns.PatternInterface.MATCHING)
                 {
+                    print(pattern._pattern + ': adding to pending'); 
                     this.stack.push(pattern); 
                 }else{
+                    print(pattern._pattern + ': moving to content'); 
                     this.remove(pattern);
                     this.contentstack.add(pattern);
                 }

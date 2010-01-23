@@ -73,6 +73,7 @@ if(!window.firecrow) window.firecrow = {};
         TagWordPattern.prototype = new Interface;
         TagWordPattern.prototype._increment = ns.PatternInterface.prototype.increment;
         TagWordPattern.prototype._conclude = ns.PatternInterface.prototype.conclude;
+        TagWordPattern.prototype._reset = ns.PatternInterface.prototype.reset;
         copyprops(TagWordPattern.prototype, {
                 // store previous character
                 // compare to end character before match
@@ -136,6 +137,11 @@ if(!window.firecrow) window.firecrow = {};
                         return;
                     }
                     this._conclude();
+                },
+                reset: function()
+                {
+                    this._prev_char = '';
+                    this._reset();
                 }
              });
 

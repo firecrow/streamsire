@@ -89,11 +89,11 @@ for(var i = 0; i < content.length; i ++)
 
 // ---------------- testing code for Parser and TagPattern and RegionTagPattern --------------------------
 /*
- */
  
 var syntax_function = new window.firecrow.TagPattern('function','function');
 var syntax_for = new window.firecrow.TagWordPattern('keyword','for');
 var syntax_is = new window.firecrow.TagPattern('keyword','is');
+var syntax_window = new window.firecrow.TagPattern('keyword','window');  
 
 var start = new window.firecrow.TagPattern('start','"');
 var nl = new window.firecrow.TagPattern('string-escape-n','\\n');
@@ -108,11 +108,15 @@ var syntax_string = new window.firecrow.RegionTagPattern(
     end);
 
 print("\n"); 
-parser = new window.firecrow.Parser(syntax_function, syntax_for, syntax_is, syntax_string); 
-test_string = 'a function in "\\tthere\\n" for ifor for_'; 
+parser = new window.firecrow.Parser(syntax_function, syntax_for, syntax_is, syntax_string, syntax_window); 
+//test_string = 'a function in "\\tthere\\n" for ifor for_'; 
+test_string = 'function a windfunction'; 
 print(test_string + '\n')
-print(parser.parse_debug(test_string));
+print(parser.parse(test_string));
+// print(parser.parse_debug(test_string));
+
 //print(parser.parse(test_string));
+ */
 
 
 /* ------ syntax string test ------- 
@@ -214,3 +218,10 @@ process();
 print(val);
 
  */
+
+var p = new ns.TagWordPattern('key','hello');
+var content = "hello";
+parser = new ns.Parser(p)
+print(parser.parse(content));
+print(parser.parse(content));
+

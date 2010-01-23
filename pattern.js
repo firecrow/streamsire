@@ -1,3 +1,4 @@
+if(typeof window == 'undefined') window = {}; // for command line testing
 if(!window) window = {}; // for command line testing
 if(!window.firecrow) window.firecrow = {};
 (function(ns){// pattern
