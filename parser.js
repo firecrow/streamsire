@@ -259,10 +259,8 @@ if(!window.firecrow) window.firecrow = {};
             {
                 if(pattern.state == ns.PatternInterface.MATCHING)
                 {
-                    print(pattern._pattern + ': adding to pending'); 
                     this.stack.push(pattern); 
                 }else{
-                    print(pattern._pattern + ': moving to content'); 
                     this.remove(pattern);
                     this.contentstack.add(pattern);
                 }
