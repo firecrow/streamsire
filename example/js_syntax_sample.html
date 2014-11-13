@@ -29,9 +29,33 @@
             function update()
             {
                 clearlog();
-                stage.innerHTML = ns.JSHighlighter.parse_debug(inp.value);
-                // stage.innerHTML = ns.JSHighlighter.parse(inp.value);
+                //stage.innerHTML = ns.JSHighlighter.parse_debug(inp.value);
+                stage.innerHTML = ns.JSHighlighter.parse(inp.value);
             }
+
+						function show_patterns(patterns){
+							 var groups = {}
+							 var pattern_name;
+							 for(var i = 0,l=patterns.length; i<l; i++){
+							 	  pattern_name =	patterns[i].name;
+									if(typeof patterns[i]._pattern !== 'string'){
+											continue;
+									}
+							 	  if(!groups[pattern_name]){
+											groups[pattern_name] = []
+									}
+									groups[pattern_name].push(patterns[i]._pattern);
+							 }
+							 console.log(groups);
+							 var div = document.getElementById('patterns');
+							 var str = '';
+							 for(var k in groups){
+								 str += '<div class="pattern-group">' + k + '<br>'
+								 str += groups[k].join(',');
+								 str += '</div>';
+							 }
+							 div.innerHTML = str;
+						}
             
             window.onload = function()
             {
@@ -49,15 +73,16 @@
                         break;
                     }
                 }
+								show_patterns(ns.JSHighlighter.comparemanager.patterns);
             }
             //-->
         </script>
         <style>
             * {margin: 0px; padding: 0px; border: none;}
             .stage-container {
-                width:600px; 
-                margin: 20px auto; 
+                width:300px; 
 								position:relative;
+								float: left;
             }
             textarea {
                 width: 298px;
@@ -93,13 +118,27 @@
             .syntax-string { color: rgb(150,150,150); font-weight: bold;  }
             .syntax-string-escape { color: rgb(100,100,100); font-weight: normal;  }
             #log {clear:both;}
+						#patterns {
+							  float:right;
+						}
+						.pattern-group {
+								border: 2px solid gray;
+								padding: 10px;
+								margin: 4px;
+						}
+						#content {
+							 width: 800px;	
+							 margin: 40px auto;
+						}
         </style>
 	</head>
 <body>
-
+<div id="content">
 <div class="stage-container">
     <pre class="stage"></pre> 
     <textarea rows="10" cols="40"></textarea>
+</div>
+<div id="patterns"></div>
 </div>
 <pre id="log">
 ?
