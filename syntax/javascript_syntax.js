@@ -27,12 +27,12 @@ if(!window.firecrow) window.firecrow = {};
         return results;
     }
     
-    //add_word_patterns('syntax-basic',['var','this']); 
-    //add_word_patterns('syntax-reserved',['function','for','window']); 
+    add_word_patterns('syntax-basic',['var','this']); 
+    add_word_patterns('syntax-reserved',['function','for','window']); 
     add_word_patterns('syntax-reserved',['function','for']); 
-    //add_patterns('syntax-basic',['{','}','[',']','.',';','']); 
-    //add_patterns('syntax-reserved',['[',']','.','=','+','!=','-','/']); 
-    //add_patterns('syntax-standout',['(',')']); 
+    add_patterns('syntax-basic',['{','}','[',']','.',';','']); 
+    add_patterns('syntax-reserved',['.','=','+','!=','-','/']); 
+    add_patterns('syntax-standout',['(',')']); 
     
     var syntax_string_quote = new ns.RegionTagPattern(
         'syntax-string',
@@ -46,4 +46,3 @@ if(!window.firecrow) window.firecrow = {};
     ns.Parser.apply(ns.JSHighlighter, patterns);
 
 })(window.firecrow);
-

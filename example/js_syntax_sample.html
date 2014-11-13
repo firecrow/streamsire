@@ -37,7 +37,8 @@
             {
                 log = document.getElementById('log');
                 inp = document.getElementsByTagName('TEXTAREA')[0];
-                inp.onchange = update; 
+                inp.onkeypress = update;
+								// todo: handle tab
 
                 var all_div = document.getElementsByTagName('PRE'); 
                 for( var i = 0; i < all_div.length; i++)
@@ -56,38 +57,49 @@
             .stage-container {
                 width:600px; 
                 margin: 20px auto; 
+								position:relative;
             }
             textarea {
-                float:left;
                 width: 298px;
                 height: 300px;
                 border: 1px solid rgb(0,0,0)
+								position:absolute;
+                padding: 10px;
+								z-index:2;
+								opacity: 0;
+								top: 0;
+								font-size: 12px;
+								font-family: monospace;
+								color: rgba(255,255,255,0.2);
             }
             .stage { 
-                 float: right;
-                 width: 278px;
-                 height: 280px;
-                 border-style:solid;
-                 border-color:rgb(0,0,0);
-                 border-width: 1px 1px 1px 0px;
-                 background-color: rgb(0,0,0);
-                 color: rgb(255,255,255);
-                 padding: 10px;
+                width: 278px;
+                height: 280px;
+                border-style:solid;
+                border-color:rgb(0,0,0);
+                border-width: 1px 1px 1px 0px;
+                background-color: rgb(0,0,0);
+                color: rgb(255,255,255);
+                padding: 10px;
+								position:absolute;
+								top: 0;
+								font-size: 12px;
+								font-family: monospace;
             }
-            .stage span {font-size: 14px; font-family: monospace;}
+            .stage span { font-family: monospace;}
             .syntax-reserved { color: rgb(150,150,150);  }
-            .syntax-basic { color: rgb(100,100,100);  font-size: 14px;}
-            .syntax-standout { color: rgb(150,150,150); font-weight: bold; font-size: 14px; }
-            .syntax-string { color: rgb(150,150,150); font-weight: bold; font-size: 14px; }
-            .syntax-string-escape { color: rgb(100,100,100); font-weight: normal; font-size: 14px; }
+            .syntax-basic { color: rgb(100,100,100);  }
+            .syntax-standout { color: rgb(150,150,150); font-weight: bold;  }
+            .syntax-string { color: rgb(150,150,150); font-weight: bold;  }
+            .syntax-string-escape { color: rgb(100,100,100); font-weight: normal;  }
             #log {clear:both;}
         </style>
 	</head>
 <body>
 
 <div class="stage-container">
-    <textarea rows="10" cols="40"></textarea>
     <pre class="stage"></pre> 
+    <textarea rows="10" cols="40"></textarea>
 </div>
 <pre id="log">
 ?
