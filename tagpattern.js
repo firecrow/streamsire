@@ -18,14 +18,10 @@ if(!window.firecrow) window.firecrow = {};
             Interface.prototype, {
                 name:'',
                 usage: 'TagPattern(String css-class-name, String pattern)',
-                _validate_string: function(name, str)
-                {
-                    if(!(typeof str == 'string')) 
-                        throw Error('TagPattern: "' + name + '" must be typeof "string" see TagPattern.usage for details');
-                }, 
                 init_tag: function(name)
                 {
-                    this._validate_string('name', name);
+                    if(!(typeof name == 'string')) 
+                        throw Error('TagPattern: "' + name + '" must be typeof "string" see TagPattern.usage for details');
                     this.name = name;
                 }, 
                 start_tag: function()

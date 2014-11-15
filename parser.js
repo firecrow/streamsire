@@ -7,19 +7,12 @@ if(!window.firecrow) window.firecrow = {};
         throw new Error('parser namespace: depends on "PatternInterface", not found in "ns"');
      
     ns.Parser = function(){// usage: Parser(pattern,[pattern,[...]])
-				this.init_parser.apply(this, arguments); 
+				if(arguments.length){
+						this.comparemanager = new CompareManager(arguments);
+				}
 		}
 		ns.Parser.prototype = {
 				comparemanager:{},
-				init_parser: function()
-				{
-						// enable dynamic argument assigment 
-						// e.g. var parser_obj = new Parser(); Parser.apply(parser_obj, args);
-						if(arguments.length)
-						{ 
-								this.comparemanager = new CompareManager(arguments);
-						}
-				},
 				parse: function(content) 
 				{
 						this.comparemanager.reset();
@@ -149,16 +142,17 @@ if(!window.firecrow) window.firecrow = {};
             }, 
             remove: function(pattern) // formerly del
             {
+								var self = this;
                 function indexById()
                 {
-                  for(var i = 0; i < this.stack.length; i++){
-                    if(pattern == this.stack[i])
+                  for(var i = 0; i < self.stack.length; i++){
+                    if(pattern == self.stack[i])
                       return i;
                   }
                   return -1;
                 }
                 //var index = this.stack.indexOf(pattern); 
-                var index = indexById.call(this);
+                var index = indexById(this);
                 if(index != -1)
                     this.stack.splice(index, 1); 
             },

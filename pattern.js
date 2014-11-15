@@ -16,18 +16,14 @@ if(!window.firecrow) window.firecrow = {};
         Interface.status_codes = ['NO_MATCH','MATCHING','MATCH']; 
         Interface.prototype = {
             usage:'PatternInterface(String pattern)',
-            _validate_string: function(name, str)
-            {
-                if(!(typeof str == 'string')) 
-                    throw Error('PatternInterface: "' + name + '" must be instanceof "string" see Pattern.usage for details');
-            }, 
             init_pattern: function(pattern)
             {
-                this._validate_string('pattern', pattern);
+                if(!(typeof pattern == 'string')) 
+                    throw Error('PatternInterface: "' + name + '" must be instanceof "string" see Pattern.usage for details');
                 this._pattern = pattern
                 this._count = 0; 
                 this._shelf = '';
-                this.state = 0;
+                this.state = this.NO_MATCH;
                 this.value = '';
             }, 
             increment: function(c)
@@ -68,7 +64,7 @@ if(!window.firecrow) window.firecrow = {};
             }, 
             handle: function()
             { 
-                this.value = this.value;
+								return this.value;
             }, 
             toString: function()
             {
