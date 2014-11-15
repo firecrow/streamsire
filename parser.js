@@ -109,14 +109,11 @@ if(!window.firecrow) window.firecrow = {};
             {
                 this.state = state;
             },
-            _init_state: function()
-            {
-                for(var pi=0; pi < this._target.patterns.length; pi++)
-                    this._pattern_states[pi] = ns.PatternInterface.NO_MATCH;
-            },
             clear: function()
             {
                 this._pattern_states = [];
+                for(var pi=0; pi < this._target.patterns.length; pi++)
+                    this._pattern_states[pi] = ns.PatternInterface.NO_MATCH;
             }
         }
         
