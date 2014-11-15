@@ -3,8 +3,8 @@ if(!window.firecrow) window.firecrow = {};
 
 (function(ns){//  region patterns
 
-    if(!(ns.PatternInterface && ns.ParserInterface))
-        throw new Error('region patterns namespace: depends on "PatternInterface" and "ParserInterface", not found in "ns"');
+    if(!(ns.PatternInterface && ns.Parser))
+        throw new Error('region patterns namespace: depends on "PatternInterface" and "Parser", not found in "ns"');
     
     function copyprops(to, from)
     { 

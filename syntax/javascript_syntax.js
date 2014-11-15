@@ -3,8 +3,8 @@ if(!window.firecrow) window.firecrow = {};
 
 (function(ns){ 
 
-    if(!(ns.TagPattern && ns.ParserInterface))
-        throw new Error('javascript syntax: requires "TagPattern" and "ParserInterface" not found in "ns"');
+    if(!(ns.TagPattern && ns.Parser))
+        throw new Error('javascript syntax: requires "TagPattern" and "Parser" not found in "ns"');
 
     var patterns = [];
     add_patterns = function(name, patterns_arg)

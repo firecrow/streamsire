@@ -12,39 +12,35 @@ if(!window.firecrow) window.firecrow = {};
             to[prop] = from[prop];
     }
      
-    var Interface = function(){};
-        Interface.prototype = {
-            comparemanager:{},
-            init_parser: function()
-            {
-                // enable dynamic argument assigment 
-                // e.g. var parser_obj = new Parser(); Parser.apply(parser_obj, args);
-                if(arguments.length)
-                { 
-                    this.comparemanager = new CompareManager(arguments);
-                }
-            },
-            parse: function(content) 
-            {
-                this.comparemanager.reset();
-                for(var i = 0; i < content.length; i++)  
-                    this.comparemanager.run(content.charAt(i)); 
-                
-                this.comparemanager.conclude();
-                return this.comparemanager.value || '';
-            },
-            toString: function()
-            {
-                return '[object ParserInterface]';
-            }
-        }
+    function Parser(){// usage: Parser(pattern,[pattern,[...]])
+				this.init_parser.apply(this, arguments); 
+		}
+		Parser.prototype = {
+				comparemanager:{},
+				init_parser: function()
+				{
+						// enable dynamic argument assigment 
+						// e.g. var parser_obj = new Parser(); Parser.apply(parser_obj, args);
+						if(arguments.length)
+						{ 
+								this.comparemanager = new CompareManager(arguments);
+						}
+				},
+				parse: function(content) 
+				{
+						this.comparemanager.reset();
+						for(var i = 0; i < content.length; i++)  
+								this.comparemanager.run(content.charAt(i)); 
+						
+						this.comparemanager.conclude();
+						return this.comparemanager.value || '';
+				},
+				toString: function()
+				{
+						return '[object ParserInterface]';
+				}
+		}
 
-    var Parser = function() // usage: Parser(pattern,[pattern,[...]])
-        {
-            this.init_parser.apply(this, arguments); 
-        }
-
-        Parser.prototype = new Interface;
 
     var CompareManager = function(patterns)
         {
@@ -266,7 +262,7 @@ if(!window.firecrow) window.firecrow = {};
         }
 
     copyprops(ns, 
-            {'ParserInterface':Interface, 'Parser':Parser, 
+            {'Parser':Parser, 
             'ParserCompareManager':CompareManager, 
             'ParserStateManager':StateManager});
 
