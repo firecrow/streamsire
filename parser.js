@@ -33,72 +33,6 @@ if(!window.firecrow) window.firecrow = {};
                 this.comparemanager.conclude();
                 return this.comparemanager.value || '';
             },
-            parse_debug: function(content)
-            {
-                function plot_shelves(stack, patterns, padding)
-                {
-                    var content = '';
-                    for(var i=0; i<stack.length; i++)
-                    {         
-                        if(typeof stack[i]._pattern == 'string')
-                            content += padding + stack[i]._pattern + ':' + stack[i]._shelf + '\n';
-                        else if(typeof stack[i]._pattern == 'object'){ 
-                            content += padding + 'region shelf:' + stack[i]._shelf + '\n';
-                            content += run_plot_shelves(stack[i]._pattern.mid,'        ')
-                        }
-                        else if(typeof stack[i]._pattern == 'undefined')
-                            content += padding + 'stack[' + i + '] not found \n';
-                            
-                    }
-                    return content;
-                }
-                
-                function run_plot_shelves(parser, padding)
-                {
-                    var stack = parser.comparemanager.pendingstack.stack; 
-                    var patterns = parser.comparemanager.patterns;
-                    return plot_shelves(stack, patterns,padding);
-                }
-
-                function plot_values()
-                {
-                    var values = [];
-                    var patterns = this.comparemanager.patterns;
-                    for(var i = 0; i < patterns.length; i++)
-                        values.push(patterns[i]._pattern  + ':\'' + patterns[i].value + '\'');
-                         
-                    return '' + values;
-                }
-
-                
-                var debug_val = '';
-                this._value = '';
-                function parse_normal(c)
-                {
-                    this.comparemanager.run_debug(c);  
-                    return this.comparemanager._round_val;
-                }
-
-                function debug(c) 
-                {
-                    val = parse_normal.call(this, c); 
-                    return 'c:' + c + ' :\'' + val + '\'\n'
-                    'plot shelves:\n' +   run_plot_shelves(this,'    ');
-                }
-
-                this.comparemanager.reset();
-                for(var i = 0; i < content.length; i++)  
-                {
-                    var val = debug.call(this, content.charAt(i));
-                    // debug_val += val;
-                    print(val);
-                }
-                
-                this.comparemanager.conclude();
-
-                // print(debug_val);
-                return this.comparemanager.value || '';
-            },
             toString: function()
             {
                 return '[object ParserInterface]';
@@ -132,18 +66,6 @@ if(!window.firecrow) window.firecrow = {};
                 this._round_val = this._get_value() || '';
                 this.value += this._round_val; 
             },
-            run_debug:function(c)
-            {
-                this._char = c;
-                for(var pi=0; pi < this.patterns.length; pi++)
-                    this._evaluate_pattern(c, this.patterns[pi]);
-                
-                print(this.pendingstack._debug.call(this.pendingstack));
-                print(this.pendingstack.contentstack._debug.call(this.pendingstack.contentstack));
-
-                this._round_val = this._get_value() || '';
-                this.value += this._round_val; 
-            }, 
             _evaluate_pattern: function(c, pattern) 
             {
                 pattern.increment(c);
@@ -264,19 +186,11 @@ if(!window.firecrow) window.firecrow = {};
                     this.remove(pattern);
                     this.contentstack.add(pattern);
                 }
-            }, 
+            },
             lead: function()
             {
                 return this.stack[0] || null;
             },
-            _debug: function(state,def) 
-            { 
-                var values = [];    
-                for(var i = 0; i < this.stack.length; i++)
-                    values.push('    ' + this.stack[i]._pattern  + ':\'' + this.stack[i]._shelf + '\'');
-                     
-                return 'pending stack: \n' + values.join('\n') + '\n'; 
-            }, 
             _get_shelf: function()
             {
                 if(this.stack.length > 0)
@@ -291,7 +205,7 @@ if(!window.firecrow) window.firecrow = {};
                     pattern.conclude();
                     this.evaluate(pattern);
                 }
-                return this.contentstack.get(StateManager.NOT_PENDING,'');
+								return this.contentstack.get(StateManager.NOT_PENDING,'');
             }
         }
 
@@ -317,14 +231,6 @@ if(!window.firecrow) window.firecrow = {};
             {
                 return this.stack[0] || null;
             },
-            _debug: function(state,def) 
-            { 
-                var values = [];    
-                for(var i = 0; i < this.stack.length; i++)
-                    values.push('    ' + this.stack[i]._pattern  + ':\'' + this.stack[i].value + '\'');
-                     
-                return 'content stack: \n' + values.join('\n') + '\n'; 
-            }, 
             get: function(state, c) 
             {
                 this._mask_len = 0;
