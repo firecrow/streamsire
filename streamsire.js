@@ -147,8 +147,9 @@ if(!window.firecrow) window.firecrow = {};
             run: function(c)
             {
                 this._char = c;
-                for(var pi = 0; pi < this.patterns.length; pi++)
+                for(var pi = 0; pi < this.patterns.length; pi++){
                     this._evaluate_pattern(c, this.patterns[pi]);
+								}
 
                 this._round_val = this._get_value() || '';
                 this.value += this._round_val; 
@@ -192,6 +193,12 @@ if(!window.firecrow) window.firecrow = {};
         StateManager.prototype = {
             register: function( pattern)
             {
+								if(pattern.state != 0){
+									console.log(pattern._pattern);
+									console.log(pattern._shelf);
+									console.log(pattern.state);
+									console.log('---');
+								}
                 if(pattern.state == ns.PatternInterface.MATCHING ) this.state = StateManager.PENDING; 
                 if(this._pattern_states[pattern._id] != pattern.state || pattern.state == ns.PatternInterface.MATCH)
                 {
