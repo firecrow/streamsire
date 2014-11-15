@@ -21,10 +21,6 @@ if(!window.firecrow) window.firecrow = {};
 						
 						this.comparemanager.conclude();
 						return this.comparemanager.value || '';
-				},
-				toString: function()
-				{
-						return '[object ParserInterface]';
 				}
 		}
 
@@ -40,6 +36,16 @@ if(!window.firecrow) window.firecrow = {};
             this.pendingstack = new PendingStack();
         }
         CompareManager.prototype = {
+            add_patterns: function(/*patterns(*/){
+								for(var i =0,l =arguments.length; i<l; i++){
+									 var pattern = arguments[i];
+									 if(!(pattern instanceof ns.PatternInterface))
+											throw new Error('ParserInterface: pattern not instance of PatternInterface');
+								 	 pattern._id = this._next_pattern_id;
+									 this.patterns[pattern._id] = pattern;
+									 this._next_pattern_id++;
+								}
+            },
             run: function(c)
             {
                 this._char = c;
@@ -72,36 +78,20 @@ if(!window.firecrow) window.firecrow = {};
                       
                 this.statemanager.clear();
                 this.statemanager.state = StateManager.NOT_PENDING;
-            },
-            add_patterns: function(/*patterns(*/){
-								for(var i =0,l =arguments.length; i<l; i++){
-									 var pattern = arguments[i];
-									 if(!(pattern instanceof ns.PatternInterface))
-											throw new Error('ParserInterface: pattern not instance of PatternInterface');
-								 	 pattern._id = this._next_pattern_id;
-									 this.patterns[pattern._id] = pattern;
-									 this._next_pattern_id++;
-								}
             }
         }
 
     var StateManager = function(target)
         {
-            this.init_states();
+						this.state = 0;
             this._target = target;
-            this._init_state(); 
+						this._pattern_states = [];
         }
         StateManager.NOT_PENDING = 0;
         StateManager.PENDING = 1;
         StateManager.NEW_PENDING = 2;
         StateManager.status_codes = ['NOT_PENDING','PENDING','NEW_PENDING'];
         StateManager.prototype = {
-            init_states: function()
-            {
-                this.state = 0;
-                this._target= {};
-                this._pattern_states = [];
-            },
             register: function( pattern)
             {
                 if(pattern.state == ns.PatternInterface.MATCHING ) this.state = StateManager.PENDING; 
