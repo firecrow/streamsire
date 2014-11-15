@@ -114,8 +114,9 @@ if(!window.firecrow) window.firecrow = {};
 				parse: function(content) 
 				{
 						this.comparemanager.reset();
-						for(var i = 0; i < content.length; i++)  
+						for(var i = 0, l = content.length; i<l; i++){
 								this.comparemanager.run(content.charAt(i)); 
+						}
 						
 						this.comparemanager.conclude();
 						return this.comparemanager.value || '';
