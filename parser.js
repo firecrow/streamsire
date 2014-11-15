@@ -5,17 +5,11 @@ if(!window.firecrow) window.firecrow = {};
     
     if(!ns.PatternInterface)
         throw new Error('parser namespace: depends on "PatternInterface", not found in "ns"');
-    
-    function copyprops(to, from)
-    { 
-        for(prop in from)
-            to[prop] = from[prop];
-    }
      
-    function Parser(){// usage: Parser(pattern,[pattern,[...]])
+    ns.Parser = function(){// usage: Parser(pattern,[pattern,[...]])
 				this.init_parser.apply(this, arguments); 
 		}
-		Parser.prototype = {
+		ns.Parser.prototype = {
 				comparemanager:{},
 				init_parser: function()
 				{
@@ -252,19 +246,14 @@ if(!window.firecrow) window.firecrow = {};
             {
                 pattern.value = pattern.value.substring(0, pattern.value.length - this._mask_len); 
                 if(pattern.value.length > this._mask_len) this._mask_len = pattern.value.length;
-            }, 
+            },
             _handle_if_match: function(pattern)
             {
                 if(pattern.state == ns.PatternInterface.MATCH)
                     pattern.handle();
                 return pattern;
-            } 
+            }
         }
-
-    copyprops(ns, 
-            {'Parser':Parser, 
-            'ParserCompareManager':CompareManager, 
-            'ParserStateManager':StateManager});
 
 })(window.firecrow); // pass namespace in here
 
