@@ -40,7 +40,7 @@ if(!window.firecrow) window.firecrow = {};
         {
             this._next_pattern_id = 0;
             this.patterns = [];
-            this.add_patterns_batch(patterns);
+            this.add_patterns.apply(this, patterns);
             this.statemanager = new StateManager(this);
             this.value = '';
             this._char = '';
@@ -67,7 +67,7 @@ if(!window.firecrow) window.firecrow = {};
                 this.statemanager.reset();
                 return this.pendingstack.contentstack.get(state, this._char); // this._char planned to be removed
             },
-            conclude: function(c)
+            conclude: function()
             {
                 this.value += this.pendingstack.conclude();
             },
@@ -80,20 +80,15 @@ if(!window.firecrow) window.firecrow = {};
                 this.statemanager.clear();
                 this.statemanager.state = StateManager.NOT_PENDING;
             },
-            add_pattern: function(pattern)
-            {
-                if(!(pattern instanceof ns.PatternInterface))
-                    throw new Error('ParserInterface: pattern not instance of PatternInterface');
-
-                pattern._id = this._next_pattern_id;
-                this.patterns[pattern._id] = pattern;
-                this._next_pattern_id++;
-                return pattern._id;
-            }, 
-            add_patterns_batch: function(patterns)
-            {
-                for(var i=0; i < patterns.length; i++)
-                    this.add_pattern(patterns[i]);
+            add_patterns: function(/*patterns(*/){
+								for(var i =0,l =arguments.length; i<l; i++){
+									 var pattern = arguments[i];
+									 if(!(pattern instanceof ns.PatternInterface))
+											throw new Error('ParserInterface: pattern not instance of PatternInterface');
+								 	 pattern._id = this._next_pattern_id;
+									 this.patterns[pattern._id] = pattern;
+									 this._next_pattern_id++;
+								}
             }
         }
 
