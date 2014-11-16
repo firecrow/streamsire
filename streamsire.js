@@ -24,7 +24,7 @@ if(!window.firecrow) window.firecrow = {};
                 this._count = 0; 
                 this._shelf = '';
                 this.state = this.NO_MATCH;
-								this._id = null;//set and used by controller objects to an int
+                this._id = null;//set and used by controller objects to an int
                 this.value = '';
             }, 
             increment: function(c)
@@ -61,7 +61,7 @@ if(!window.firecrow) window.firecrow = {};
             }, 
             handle: function()
             { 
-								return this.value;
+                return this.value;
             }, 
             reset: function()
             {
@@ -91,22 +91,22 @@ if(!window.firecrow) window.firecrow = {};
         throw new Error('parser namespace: depends on "PatternInterface", not found in "ns"');
      
     ns.Parser = function(){// usage: Parser(pattern,[pattern,[...]])
-				if(arguments.length){
-						this.comparemanager = new CompareManager(arguments);
-				}
-		}
-		ns.Parser.prototype = {
-				comparemanager:{},
-				parse: function(content) 
-				{
-						content += String.fromCharCode(4);// end of file
-						this.comparemanager.reset();
-						for(var i = 0, l = content.length; i<l; i++){
-								this.comparemanager.run(content.charAt(i)); 
-						}
-						return this.comparemanager.value + this.comparemanager._shelf || '';
-				}
-		}
+        if(arguments.length){
+            this.comparemanager = new CompareManager(arguments);
+        }
+    }
+    ns.Parser.prototype = {
+        comparemanager:{},
+        parse: function(content) 
+        {
+            content += String.fromCharCode(4);// end of file
+            this.comparemanager.reset();
+            for(var i = 0, l = content.length; i<l; i++){
+                this.comparemanager.run(content.charAt(i)); 
+            }
+            return this.comparemanager.value + this.comparemanager._shelf || '';
+        }
+    }
 
 
     var CompareManager = function(patterns)
@@ -116,85 +116,85 @@ if(!window.firecrow) window.firecrow = {};
             this.add_patterns.apply(this, patterns);
             this.value = '';
             this._char = '';
-						this._pending = [];// new
-						this._shelf = '';
-						this._confirmed_out = '';
+            this._pending = [];// new
+            this._shelf = '';
+            this._confirmed_out = '';
         }
         CompareManager.prototype = {
             add_patterns: function(/*patterns(*/){
-								for(var i =0,l =arguments.length; i<l; i++){
-									 var pattern = arguments[i];
-									 if(!(pattern instanceof ns.PatternInterface))
-											throw new Error('ParserInterface: pattern not instance of PatternInterface');
-								 	 pattern._id = this._next_pattern_id;
-									 this.patterns[pattern._id] = pattern;
-									 this._next_pattern_id++;
-								}
+                for(var i =0,l =arguments.length; i<l; i++){
+                   var pattern = arguments[i];
+                   if(!(pattern instanceof ns.PatternInterface))
+                      throw new Error('ParserInterface: pattern not instance of PatternInterface');
+                    pattern._id = this._next_pattern_id;
+                   this.patterns[pattern._id] = pattern;
+                   this._next_pattern_id++;
+                }
             },
             run: function(c)
             {
-								// kill this
-								this._char = c;
-								console.log('--- in '+c+'---');
-								var content, for_content;
+                // kill this
+                this._char = c;
+                console.log('--- in '+c+'---');
+                var content, for_content;
                 for(var pi = 0; pi < this.patterns.length; pi++){
-										content = this._evaluate_pattern(c, this.patterns[pi]);
-										if(content){
-												this.state = ns.PatternInterface.NO_MATCH;
-												for(var i = 0, l = this._pending.length; i<l; i++){
-													this._pending[i].state = ns.PatternInterface.NO_MATCH;
-												}
-												this._pending = [];
-												break;
-										}
-								}
-								if(content){// match found
-									for_content = content;
-									this._shelf = '';
-								}else{
-									// no match found
-									if(this.state === ns.PatternInterface.NO_MATCH && c != String.fromCharCode(4)){
-										var for_content = c;
-									// match pending
-									}else{
-										var for_content = '';
-										this._shelf += c;
-									}
-								}
-								this.value += for_content 
-								console.log(this.value);
-								console.log(this.state);
+                    content = this._evaluate_pattern(c, this.patterns[pi]);
+                    if(content){
+                        this.state = ns.PatternInterface.NO_MATCH;
+                        for(var i = 0, l = this._pending.length; i<l; i++){
+                          this._pending[i].state = ns.PatternInterface.NO_MATCH;
+                        }
+                        this._pending = [];
+                        break;
+                    }
+                }
+                if(content){// match found
+                  for_content = content;
+                  this._shelf = '';
+                }else{
+                  // no match found
+                  if(this.state === ns.PatternInterface.NO_MATCH && c != String.fromCharCode(4)){
+                    var for_content = c;
+                  // match pending
+                  }else{
+                    var for_content = '';
+                    this._shelf += c;
+                  }
+                }
+                this.value += for_content 
+                console.log(this.value);
+                console.log(this.state);
             },
             _evaluate_pattern: function(c, pattern){
                 pattern.increment(c);
-								if(pattern._pattern === '!='){
-										console.log('state:'+pattern.state+', count:' + pattern._count);
-								}
-								if(pattern.state == ns.PatternInterface.MATCHING){
-									 this.state = pattern.state;
-									 if(this._pending.indexOf(pattern) === -1){
-											this._pending.push(pattern);
-									 }
-								}else{
-									 var idx = this._pending.indexOf(pattern);
-										if(idx !== -1){
-											this._pending.splice(idx,1);
-									 }
-									 if(pattern.state == ns.PatternInterface.MATCH){
-										  this.state = pattern.state;
-									 		for_out = pattern.handle();
-											return for_out;
-									 }
-								}
-								return false;
+                if(pattern._pattern === '!='){
+                    console.log('state:'+pattern.state+', count:' + pattern._count);
+                }
+                if(pattern.state == ns.PatternInterface.MATCHING){
+                   this.state = pattern.state;
+                   if(this._pending.indexOf(pattern) === -1){
+                      this._pending.push(pattern);
+                   }
+                }else{
+                   var idx = this._pending.indexOf(pattern);
+                    if(idx !== -1){
+                      this._pending.splice(idx,1);
+                   }
+                   if(pattern.state == ns.PatternInterface.MATCH){
+                      this.state = pattern.state;
+                       for_out = pattern.handle();
+                      return for_out;
+                   }
+                }
+                return false;
             },
             reset: function()
             {
                 this.value = '';
                 for(var i=0; i< this.patterns.length; i++)
                     this.patterns[i].reset();
-								this.state = ns.PatternInterface.NO_MATCH;
-								this._shelf = '';
+                this.state = ns.PatternInterface.NO_MATCH;
+                this._shelf = '';
             }
         }
 
