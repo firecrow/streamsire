@@ -64,16 +64,6 @@ if(!window.firecrow) window.firecrow = {};
             { 
 								return this.value;
             }, 
-            toString: function()
-            {
-                return '[object PatternInterface]';
-            }, 
-            conclude: function()
-            {
-                if(this.state == Interface.MATCHING)
-                    this.state = Interface.NO_MATCH;
-                this.value = this._get_shelf(); 
-            }, 
             reset: function()
             {
                 this.state = Interface.NO_MATCH;
@@ -110,11 +100,11 @@ if(!window.firecrow) window.firecrow = {};
 				comparemanager:{},
 				parse: function(content) 
 				{
+						content += String.fromCharCode(4);// end of file
 						this.comparemanager.reset();
 						for(var i = 0, l = content.length; i<l; i++){
 								this.comparemanager.run(content.charAt(i)); 
 						}
-						//this.comparemanager.conclude();
 						return this.comparemanager.value || '';
 				}
 		}
@@ -161,7 +151,7 @@ if(!window.firecrow) window.firecrow = {};
 								if(content){
 									for_content = content;
 								}else{
-									if(this.state === ns.PatternInterface.NO_MATCH){
+									if(this.state === ns.PatternInterface.NO_MATCH && c != String.fromCharCode(4)){
 										var for_content = c;
 									}else{
 										var for_content = '';
