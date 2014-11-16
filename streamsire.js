@@ -14,34 +14,31 @@ if(!window.firecrow) window.firecrow = {};
         Interface.NO_MATCH = 0;
         Interface.MATCHING = 1;
         Interface.MATCH = 2;
-        Interface.status_codes = ['NO_MATCH','MATCHING','MATCH']; 
+        Interface.status_codes = ['NO_MATCH','MATCHING','MATCH'];
         Interface.prototype = {
-            usage:'PatternInterface(String pattern)',
             init_pattern: function(pattern)
             {
                 if(!(typeof pattern == 'string')) 
-                    throw Error('PatternInterface: "' + name + '" must be instanceof "string" see Pattern.usage for details');
+                    throw Error('PatternInterface: "' + name + '" must be instanceof "string"');
                 this._pattern = pattern
                 this._count = 0; 
                 this._shelf = '';
                 this.state = this.NO_MATCH;
+								this._id = null;//set and used by controller objects to an int
                 this.value = '';
             }, 
             increment: function(c)
-            { 
-                if(this._pattern.charAt(this._count) == c)
-                {
-                    if(this._count == (this._pattern.length -1)) 
-                    {
+            {
+								console.log('in increment:'+this._pattern);
+                if(this._pattern.charAt(this._count) == c){
+                    if(this._count == (this._pattern.length-1)) {
                         this._add_to_shelf(c);
                         this._set(Interface.MATCH, this._get_shelf());
-                    }else{ 
+                    }else{
                         this._add_to_shelf(c);
                         this._set(Interface.MATCHING, '');
                     }
-                }    
-                else
-                {
+                }else{
                     this._add_to_shelf(c);
                     this._set(Interface.NO_MATCH, this._get_shelf());
                 }
@@ -117,8 +114,7 @@ if(!window.firecrow) window.firecrow = {};
 						for(var i = 0, l = content.length; i<l; i++){
 								this.comparemanager.run(content.charAt(i)); 
 						}
-						
-						this.comparemanager.conclude();
+						//this.comparemanager.conclude();
 						return this.comparemanager.value || '';
 				}
 		}
@@ -133,6 +129,9 @@ if(!window.firecrow) window.firecrow = {};
             this.value = '';
             this._char = '';
             this.pendingstack = new PendingStack();
+						this._pending = [];// new
+						this._shelf = '';
+						this._confirmed_out = '';
         }
         CompareManager.prototype = {
             add_patterns: function(/*patterns(*/){
@@ -147,19 +146,56 @@ if(!window.firecrow) window.firecrow = {};
             },
             run: function(c)
             {
-                this._char = c;
+								this._char = c;
+								console.log('--- in '+c+'---');
+								var content, for_content;
                 for(var pi = 0; pi < this.patterns.length; pi++){
-                    this._evaluate_pattern(c, this.patterns[pi]);
+										content = this._evaluate_pattern(c, this.patterns[pi]);
+										if(content){
+												this.state = ns.PatternInterface.NO_MATCH;
+												for(var i = 0, l = this._pending.length; i<l; i++){
+													this._pending[i].state = ns.PatternInterface.NO_MATCH;
+												}
+												this._pending = [];
+												break;
+										}
 								}
-
-                this._round_val = this._get_value() || '';
-                this.value += this._round_val; 
+								if(content){
+									for_content = content;
+								}else{
+									if(this.state === ns.PatternInterface.NO_MATCH){
+										var for_content = c;
+									}else{
+										var for_content = '';
+									}
+								}
+								this.value += for_content;
+								console.log(this.value);
+								console.log(this.state);
             },
-            _evaluate_pattern: function(c, pattern) 
-            {
+            _evaluate_pattern: function(c, pattern){
                 pattern.increment(c);
-                this.statemanager.register(pattern); 
-            }, 
+								if(pattern._pattern === 'var'){
+									console.log('count:' +pattern._count+','+ pattern.state);
+								}
+								if(pattern.state == ns.PatternInterface.MATCHING){
+									 this.state = pattern.state;
+									 if(this._pending.indexOf(pattern) === -1){
+											this._pending.push(pattern);
+									 }
+								}else{
+									 var idx = this._pending.indexOf(pattern);
+										if(idx !== -1){
+											this._pending.splice(idx,1);
+									 }
+									 if(pattern.state == ns.PatternInterface.MATCH){
+										  this.state = pattern.state;
+									 		for_out = pattern.handle();
+											return for_out;
+									 }
+								}
+								return false;
+            },
             _get_value: function()
             {
                 var state = this.statemanager.state;
@@ -194,12 +230,6 @@ if(!window.firecrow) window.firecrow = {};
         StateManager.prototype = {
             register: function( pattern)
             {
-								if(pattern.state != 0){
-									console.log(pattern._pattern);
-									console.log(pattern._shelf);
-									console.log(pattern.state);
-									console.log('---');
-								}
                 if(pattern.state == ns.PatternInterface.MATCHING ) this.state = StateManager.PENDING; 
                 if(this._pattern_states[pattern._id] != pattern.state || pattern.state == ns.PatternInterface.MATCH)
                 {
@@ -359,7 +389,6 @@ if(!window.firecrow) window.firecrow = {};
             _START_MATCHING:3,
             _MID_MATCHING:4,
             _END_MATCHING:5,
-            usage: 'RegionPatternOverlay(PatternInterface start, Array(PatternInterface, ...) or null mid_patterns, PatternInterface end)', 
             init_region: function(start,mid_patterns,end)
             {
                 this._shelf = '';
@@ -379,8 +408,7 @@ if(!window.firecrow) window.firecrow = {};
             {
                 if(!(pattern instanceof ns.PatternInterface)) 
                     throw new Error(
-                        'RegionPatternOverlay.init: "' + name + '" must be intanceof "PatternInterface" or subclass, '
-                        +     'see RegionPatternOverlay.usage for help');
+                        'RegionPatternOverlay.init: "' + name + '" must be intanceof "PatternInterface" or subclass, ');
             }, 
             _validate_init_region: function(start, mid_patterns, end)
             {
@@ -500,11 +528,10 @@ if(!window.firecrow) window.firecrow = {};
         copyprops(
             Interface.prototype, {
                 name:'',
-                usage: 'TagPattern(String css-class-name, String pattern)',
                 init_tag: function(name)
                 {
                     if(!(typeof name == 'string')) 
-                        throw Error('TagPattern: "' + name + '" must be typeof "string" see TagPattern.usage for details');
+                        throw Error('TagPattern: "' + name + '" must be typeof "string"');
                     this.name = name;
                 }, 
                 start_tag: function()
@@ -562,7 +589,7 @@ if(!window.firecrow) window.firecrow = {};
                     if(!(this._test_if_first(c) && this._test_if_lastafter(c)))
                     {
                         this._prev_char = c;
-                        return; 
+                        return;
                     }
                     this._prev_char = c;
                     this._increment(c);
