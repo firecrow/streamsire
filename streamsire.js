@@ -125,10 +125,8 @@ if(!window.firecrow) window.firecrow = {};
             this._next_pattern_id = 0;
             this.patterns = [];
             this.add_patterns.apply(this, patterns);
-            this.statemanager = new StateManager(this);
             this.value = '';
             this._char = '';
-            this.pendingstack = new PendingStack();
 						this._pending = [];// new
 						this._shelf = '';
 						this._confirmed_out = '';
@@ -196,174 +194,12 @@ if(!window.firecrow) window.firecrow = {};
 								}
 								return false;
             },
-            _get_value: function()
-            {
-                var state = this.statemanager.state;
-                this.statemanager.reset();
-                return this.pendingstack.contentstack.get(state, this._char); // this._char planned to be removed
-            },
-            conclude: function()
-            {
-                this.value += this.pendingstack.conclude();
-            },
             reset: function()
             {
                 this.value = '';
                 for(var i=0; i< this.patterns.length; i++)
                     this.patterns[i].reset();
-                      
-                this.statemanager.clear();
-                this.statemanager.state = StateManager.NOT_PENDING;
-            }
-        }
-
-    var StateManager = function(target)
-        {
-						this.state = 0;
-            this._target = target;
-						this._pattern_states = [];
-        }
-        StateManager.NOT_PENDING = 0;
-        StateManager.PENDING = 1;
-        StateManager.NEW_PENDING = 2;
-        StateManager.status_codes = ['NOT_PENDING','PENDING','NEW_PENDING'];
-        StateManager.prototype = {
-            register: function( pattern)
-            {
-                if(pattern.state == ns.PatternInterface.MATCHING ) this.state = StateManager.PENDING; 
-                if(this._pattern_states[pattern._id] != pattern.state || pattern.state == ns.PatternInterface.MATCH)
-                {
-                    this._pattern_states[pattern._id] = pattern.state; 
-                    this._target.pendingstack.evaluate(pattern);
-                }
-            },
-            reset: function()
-            {
-                this.state = StateManager.NOT_PENDING; 
-            }, 
-            set: function(state)
-            {
-                this.state = state;
-            },
-            clear: function()
-            {
-                this._pattern_states = [];
-                for(var pi=0; pi < this._target.patterns.length; pi++)
-                    this._pattern_states[pi] = ns.PatternInterface.NO_MATCH;
-            }
-        }
-        
-    var PendingStack = function()
-        {
-            this.init_pending_stack();
-        }
-        PendingStack.prototype = {
-            init_pending_stack: function()
-            {
-                this.stack = [];
-                this.contentstack = new ContentStack(this);
-            }, 
-            remove: function(pattern) // formerly del
-            {
-								var self = this;
-                function indexById()
-                {
-                  for(var i = 0; i < self.stack.length; i++){
-                    if(pattern == self.stack[i])
-                      return i;
-                  }
-                  return -1;
-                }
-                //var index = this.stack.indexOf(pattern); 
-                var index = indexById(this);
-                if(index != -1)
-                    this.stack.splice(index, 1); 
-            },
-            evaluate: function(pattern) 
-            {
-                if(pattern.state == ns.PatternInterface.MATCHING)
-                {
-                    this.stack.push(pattern); 
-                }else{
-                    this.remove(pattern);
-                    this.contentstack.add(pattern);
-                }
-            },
-            lead: function()
-            {
-                return this.stack[0] || null;
-            },
-            _get_shelf: function()
-            {
-                if(this.stack.length > 0)
-                    return this.stack[0]._get_shelf();
-                return '';
-            },
-            conclude: function()
-            {
-                for( var i=0; i < this.stack.length; i++)
-                {
-                    var pattern = this.stack[i];
-                    pattern.conclude();
-                    this.evaluate(pattern);
-                }
-								return this.contentstack.get(StateManager.NOT_PENDING,'');
-            }
-        }
-
-    var ContentStack = function(pending)
-        {
-           this.init_content_stack(pending); 
-        }
-        ContentStack.prototype = {
-            init_content_stack: function(pending)
-            {
-                this.stack = [];
-                this._pending = pending; 
-                this._mask_len = 0;
-            }, 
-            add: function(pattern) 
-            {
-                if(pattern.state == ns.PatternInterface.MATCH)
-                    this.stack.unshift(pattern);
-                else
-                    this.stack.push(pattern);
-            },
-            lead: function()
-            {
-                return this.stack[0] || null;
-            },
-            get: function(state, c) 
-            {
-                this._mask_len = 0;
-                var value = '';
-                if(state == StateManager.PENDING) 
-                {
-                    var lead = this._pending.lead()
-                    if(lead)
-                        this._mask_len = lead._shelf.length;
-                }
-                while(this.stack.length > 0) 
-                {
-                    var pattern = this.stack.shift(); 
-                    this._less_mask(pattern);
-                    this._handle_if_match(pattern);
-                    value = pattern.value + value; 
-                }
-                if(state == StateManager.PENDING)
-                    return value;
-                return value || c;
-            }, 
-            _less_mask: function(pattern) 
-            {
-                pattern.value = pattern.value.substring(0, pattern.value.length - this._mask_len); 
-                if(pattern.value.length > this._mask_len) this._mask_len = pattern.value.length;
-            },
-            _handle_if_match: function(pattern)
-            {
-                if(pattern.state == ns.PatternInterface.MATCH)
-                    pattern.handle();
-                return pattern;
+								this.state = ns.PatternInterface.NO_MATCH;
             }
         }
 
