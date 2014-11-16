@@ -29,7 +29,6 @@ if(!window.firecrow) window.firecrow = {};
             }, 
             increment: function(c)
             {
-								console.log('in increment:'+this._pattern);
                 if(this._pattern.charAt(this._count) == c){
                     if(this._count == (this._pattern.length-1)) {
                         this._add_to_shelf(c);
@@ -105,7 +104,7 @@ if(!window.firecrow) window.firecrow = {};
 						for(var i = 0, l = content.length; i<l; i++){
 								this.comparemanager.run(content.charAt(i)); 
 						}
-						return this.comparemanager.value || '';
+						return this.comparemanager.value + this.comparemanager._shelf || '';
 				}
 		}
 
@@ -134,6 +133,7 @@ if(!window.firecrow) window.firecrow = {};
             },
             run: function(c)
             {
+								// kill this
 								this._char = c;
 								console.log('--- in '+c+'---');
 								var content, for_content;
@@ -148,23 +148,27 @@ if(!window.firecrow) window.firecrow = {};
 												break;
 										}
 								}
-								if(content){
+								if(content){// match found
 									for_content = content;
+									this._shelf = '';
 								}else{
+									// no match found
 									if(this.state === ns.PatternInterface.NO_MATCH && c != String.fromCharCode(4)){
 										var for_content = c;
+									// match pending
 									}else{
 										var for_content = '';
+										this._shelf += c;
 									}
 								}
-								this.value += for_content;
+								this.value += for_content 
 								console.log(this.value);
 								console.log(this.state);
             },
             _evaluate_pattern: function(c, pattern){
                 pattern.increment(c);
-								if(pattern._pattern === 'var'){
-									console.log('count:' +pattern._count+','+ pattern.state);
+								if(pattern._pattern === '!='){
+										console.log('state:'+pattern.state+', count:' + pattern._count);
 								}
 								if(pattern.state == ns.PatternInterface.MATCHING){
 									 this.state = pattern.state;
@@ -190,6 +194,7 @@ if(!window.firecrow) window.firecrow = {};
                 for(var i=0; i< this.patterns.length; i++)
                     this.patterns[i].reset();
 								this.state = ns.PatternInterface.NO_MATCH;
+								this._shelf = '';
             }
         }
 
@@ -366,7 +371,7 @@ if(!window.firecrow) window.firecrow = {};
                 },
                 end_tag: function()
                 {
-                    return  '</span>'; 
+                    return  '</span>';
                 }, 
                 handle: function()
                 {
