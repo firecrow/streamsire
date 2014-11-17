@@ -143,7 +143,8 @@ if(!window.firecrow) window.firecrow = {};
                 var match_found = this._evaluate_state();
                 if(c != String.fromCharCode(4)){// terminating string not part of content
                     if(!match_found && this.state === ns.PatternInterface.NO_MATCH){
-                        this.value += c;
+                        this.value += this._shelf+c;
+                        this._shelf = '';
                     }else if(this.state === ns.PatternInterface.MATCHING){
                         this._shelf += c;
                     }

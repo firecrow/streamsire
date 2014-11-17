@@ -25,7 +25,6 @@
             var inp;
             function update()
             {
-                clearlog();
                 stage.innerHTML = ns.JSHighlighter.parse(inp.value);
             }
 
@@ -33,14 +32,11 @@
                  var groups = {}
                  var pattern_name;
                  for(var i = 0,l=patterns.length; i<l; i++){
-                      pattern_name =	patterns[i].name;
-                        if(typeof patterns[i]._pattern !== 'string'){
-                                continue;
-                        }
+                      pattern_name = patterns[i].name;
                       if(!groups[pattern_name]){
                                 groups[pattern_name] = []
-                        }
-                        groups[pattern_name].push(patterns[i]._pattern);
+                      }
+                      groups[pattern_name].push(patterns[i]._pattern);
                  }
                  var div = document.getElementById('patterns');
                  var str = '';
@@ -53,11 +49,9 @@
             }
 
             function show_pending(pending, comparemanager){
-                console.log(pending);
                 var div = document.getElementById('pending');
                 var str = '';
                 for(var i=0,l=pending.length;i<l;i++){
-                    console.log('showing:'+pending[i]._pattern);
                     var pattern_string = pending[i]._pattern;
                     var pending_shelf = comparemanager._shelf;
                     var remaining = pattern_string.substr(pending_shelf.length, pattern_string.length)
@@ -74,7 +68,7 @@
                 log = document.getElementById('log');
                 inp = document.getElementsByTagName('TEXTAREA')[0];
                 inp.onkeyup = update;
-								// todo: handle tab
+            // todo: handle tab
 
                 var all_div = document.getElementsByTagName('PRE'); 
                 for( var i = 0; i < all_div.length; i++)
