@@ -174,10 +174,12 @@ if(!window.firecrow) window.firecrow = {};
                            this.value += this._shelf.substr(0, this._shelf.length-pattern._pattern.length+1);
                            this.value += pattern.handle();
                            this._shelf = '';
+                           for(var i = 0, l= this._pending.length; i<l; i++){
+                               this._pending[i].reset();
+                           }
                            this._pending = [];
                            this.state = ns.PatternInterface.NO_MATCH;
                            return true;
-                           break;
                        }
                    }
                }
