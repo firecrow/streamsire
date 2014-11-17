@@ -38,6 +38,7 @@ if(!window.firecrow) window.firecrow = {};
     add_patterns('syntax-reserved',['.','=','+','!=','-','/']); 
     add_patterns('syntax-standout',['(',')']); 
     
+    /*
     var syntax_string_quote = new ns.RegionTagPattern(
         'syntax-string',
         new ns.Pattern('"'),
@@ -45,6 +46,7 @@ if(!window.firecrow) window.firecrow = {};
         new ns.Pattern('"')
     )
     patterns.push(syntax_string_quote);
+    */
 
     ns.JSHighlighter = new ns.Parser(); 
     ns.Parser.apply(ns.JSHighlighter, patterns);
