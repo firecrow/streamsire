@@ -115,7 +115,6 @@ if(!window.firecrow) window.firecrow = {};
             this.patterns = [];
             this.add_patterns.apply(this, patterns);
             this.value = '';
-            this._char = '';
             this._pending = [];// new
             this._shelf = '';
             this._confirmed_out = '';
@@ -133,36 +132,20 @@ if(!window.firecrow) window.firecrow = {};
             },
             run: function(c)
             {
-                // kill this
-                this._char = c;
                 console.log('--- in '+c+'---');
-                var content, for_content;
                 for(var pi = 0; pi < this.patterns.length; pi++){
-                    content = this._evaluate_pattern(c, this.patterns[pi]);
-                    if(content){
-                        this.state = ns.PatternInterface.NO_MATCH;
-                        for(var i = 0, l = this._pending.length; i<l; i++){
-                          this._pending[i].state = ns.PatternInterface.NO_MATCH;
-                        }
-                        this._pending = [];
-                        break;
+                    this._evaluate_pattern(c, this.patterns[pi]);
+                }
+                var match_found = this._evaluate_state();
+                if(c != String.fromCharCode(4)){// terminating string not part of content
+                    if(!match_found && this.state === ns.PatternInterface.NO_MATCH){
+                        this.value += c;
+                    }else if(this.state === ns.PatternInterface.MATCHING){
+                        this._shelf += c;
                     }
                 }
-                if(content){// match found
-                  for_content = content;
-                  this._shelf = '';
-                }else{
-                  // no match found
-                  if(this.state === ns.PatternInterface.NO_MATCH && c != String.fromCharCode(4)){
-                    var for_content = c;
-                  // match pending
-                  }else{
-                    var for_content = '';
-                    this._shelf += c;
-                  }
-                }
-                this.value += for_content 
                 console.log(this.value);
+                console.log(this._shelf);
                 console.log(this.state);
             },
             _evaluate_pattern: function(c, pattern){
@@ -171,22 +154,34 @@ if(!window.firecrow) window.firecrow = {};
                     console.log('state:'+pattern.state+', count:' + pattern._count);
                 }
                 if(pattern.state == ns.PatternInterface.MATCHING){
-                   this.state = pattern.state;
                    if(this._pending.indexOf(pattern) === -1){
                       this._pending.push(pattern);
                    }
-                }else{
-                   var idx = this._pending.indexOf(pattern);
+                }else if(pattern.state == ns.PatternInterface.NO_MATCH){
+                    var idx = this._pending.indexOf(pattern);
                     if(idx !== -1){
                       this._pending.splice(idx,1);
                    }
-                   if(pattern.state == ns.PatternInterface.MATCH){
-                      this.state = pattern.state;
-                       for_out = pattern.handle();
-                      return for_out;
-                   }
                 }
-                return false;
+            },
+            _evaluate_state: function(){// returns boolean for match found this character
+               if(!this._pending.length){
+                 this.state = ns.PatternInterface.NO_MATCH;
+               }else{
+                   this.state = ns.PatternInterface.MATCHING;
+                   for(var i = 0,l = this._pending.length; i<l; i++){
+                       var pattern = this._pending[i];
+                       if(pattern.state === ns.PatternInterface.MATCH){
+                           this.value += pattern.handle();
+                           this._shelf = '';
+                           this._pending = [];
+                           this.state = ns.PatternInterface.NO_MATCH;
+                           return true;
+                           break;
+                       }
+                   }
+               }
+               return false;
             },
             reset: function()
             {
