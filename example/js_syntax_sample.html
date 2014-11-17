@@ -29,29 +29,46 @@
                 stage.innerHTML = ns.JSHighlighter.parse(inp.value);
             }
 
-						function show_patterns(patterns){
-							 var groups = {}
-							 var pattern_name;
-							 for(var i = 0,l=patterns.length; i<l; i++){
-							 	  pattern_name =	patterns[i].name;
-									if(typeof patterns[i]._pattern !== 'string'){
-											continue;
-									}
-							 	  if(!groups[pattern_name]){
-											groups[pattern_name] = []
-									}
-									groups[pattern_name].push(patterns[i]._pattern);
-							 }
-							 var div = document.getElementById('patterns');
-							 var str = '';
-							 for(var k in groups){
-								 str += '<div class="pattern-group">' + k + '<br>'
-								 str += groups[k].join(',');
-								 str += '</div>';
-							 }
-							 div.innerHTML = str;
-						}
-            
+            function show_patterns(patterns){
+                 var groups = {}
+                 var pattern_name;
+                 for(var i = 0,l=patterns.length; i<l; i++){
+                      pattern_name =	patterns[i].name;
+                        if(typeof patterns[i]._pattern !== 'string'){
+                                continue;
+                        }
+                      if(!groups[pattern_name]){
+                                groups[pattern_name] = []
+                        }
+                        groups[pattern_name].push(patterns[i]._pattern);
+                 }
+                 var div = document.getElementById('patterns');
+                 var str = '';
+                 for(var k in groups){
+                     str += '<div class="pattern-group">' + k + '<br>'
+                     str += groups[k].join(',');
+                     str += '</div>';
+                 }
+                 div.innerHTML = str;
+            }
+
+            function show_pending(pending, comparemanager){
+                console.log(pending);
+                var div = document.getElementById('pending');
+                var str = '';
+                for(var i=0,l=pending.length;i<l;i++){
+                    console.log('showing:'+pending[i]._pattern);
+                    var pattern_string = pending[i]._pattern;
+                    var pending_shelf = comparemanager._shelf;
+                    var remaining = pattern_string.substr(pending_shelf.length, pattern_string.length)
+                    str += '<div class="pending">';
+                    str += '<span class="pending-shelf">'+ pending_shelf + '</span>';
+                    str += remaining; 
+                    str += '</div>';
+                }
+                div.innerHTML = str;
+            }
+        
             window.onload = function()
             {
                 log = document.getElementById('log');
@@ -68,7 +85,11 @@
                         break;
                     }
                 }
-								show_patterns(ns.JSHighlighter.comparemanager.patterns);
+                var parser = ns.JSHighlighter;
+                parser.pre_conclude_callback = function(){
+                    show_pending(this.comparemanager._pending, this.comparemanager);
+                }
+                show_patterns(ns.JSHighlighter.comparemanager.patterns);
             }
             //-->
         </script>
@@ -76,20 +97,20 @@
             * {margin: 0px; padding: 0px; border: none;}
             .stage-container {
                 width:300px; 
-								position:relative;
-								float: left;
+                position:relative;
+                float: left;
             }
             textarea {
                 width: 278px;
                 height: 100px;
-								display:block;
-								position:absolute;
-								top: 100px;
+                display:block;
+                position:absolute;
+                top: 100px;
                 padding: 10px;
-								z-index:2;
-								font-size: 12px;
-								font-family: monospace;
-								border: 1px solid black;
+                z-index:2;
+                font-size: 12px;
+                font-family: monospace;
+                border: 1px solid black;
             }
             .stage { 
                 width: 278px;
@@ -100,10 +121,10 @@
                 background-color: rgb(0,0,0);
                 color: rgb(255,255,255);
                 padding: 10px;
-								position:absolute;
-								top: 0;
-								font-size: 12px;
-								font-family: monospace;
+                position:absolute;
+                top: 0;
+                font-size: 12px;
+                font-family: monospace;
             }
             .stage span { font-family: monospace;}
             .syntax-reserved { color: rgb(150,150,150);  }
@@ -112,18 +133,25 @@
             .syntax-string { color: rgb(150,150,150); font-weight: bold;  }
             .syntax-string-escape { color: rgb(100,100,100); font-weight: normal;  }
             #log {clear:both;}
-						#patterns {
-							  float:right;
-						}
-						.pattern-group {
-								border: 2px solid gray;
-								padding: 10px;
-								margin: 4px;
-						}
-						#content {
-							 width: 800px;	
-							 margin: 40px auto;
-						}
+            #pending {
+                float:left;
+            }
+            .pending-shelf {
+                color:gray;
+            }
+            #patterns {
+                float:left;
+                margin-left: 320px;
+            }
+            .pattern-group {
+                border: 2px solid gray;
+                padding: 10px;
+                margin: 4px;
+            }
+            #content {
+                 width: 800px;	
+                 margin: 40px auto;
+            }
         </style>
 	</head>
 <body>
@@ -133,6 +161,7 @@
     <textarea rows="10" cols="40"></textarea>
 </div>
 <div id="patterns"></div>
+<div id="pending"></div>
 </div>
 <pre id="log">
 ?

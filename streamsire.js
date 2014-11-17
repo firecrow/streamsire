@@ -97,14 +97,19 @@ if(!window.firecrow) window.firecrow = {};
     }
     ns.Parser.prototype = {
         comparemanager:{},
+        pre_conclude_callback:function(){},
         parse: function(content) 
         {
-            content += String.fromCharCode(4);// end of file
             this.comparemanager.reset();
             for(var i = 0, l = content.length; i<l; i++){
                 this.comparemanager.run(content.charAt(i)); 
             }
+            this.conclude();
             return this.comparemanager.value + this.comparemanager._shelf || '';
+        },
+        conclude: function(){
+            this.pre_conclude_callback();
+            this.comparemanager.run(String.fromCharCode(4));
         }
     }
 
