@@ -78,6 +78,7 @@ if(!window.firecrow) window.firecrow = {};
 
     copyprops(ns, {'PatternInterface':Interface, 'Pattern':Pattern});
 
+
 })(window.firecrow); 
 
 
@@ -91,9 +92,7 @@ if(!window.firecrow) window.firecrow = {};
         throw new Error('parser namespace: depends on "PatternInterface", not found in "ns"');
      
     ns.Parser = function(){// usage: Parser(pattern,[pattern,[...]])
-        if(arguments.length){
-            this.comparemanager = new CompareManager(arguments);
-        }
+        this.comparemanager = new CompareManager();
     }
     ns.Parser.prototype = {
         comparemanager:{},
@@ -110,7 +109,7 @@ if(!window.firecrow) window.firecrow = {};
         conclude: function(){
             this.pre_conclude_callback();
             this.comparemanager.run(String.fromCharCode(4));
-        }
+        },
     }
 
 
@@ -118,16 +117,20 @@ if(!window.firecrow) window.firecrow = {};
         {
             this._next_pattern_id = 0;
             this.patterns = [];
-            this.add_patterns.apply(this, patterns);
+            this.add_patterns(patterns);
             this.value = '';
             this._pending = [];// new
             this._shelf = '';
             this._confirmed_out = '';
         }
         CompareManager.prototype = {
-            add_patterns: function(/*patterns(*/){
-                for(var i =0,l =arguments.length; i<l; i++){
-                   var pattern = arguments[i];
+            add_patterns: function(patterns){
+                if(!patterns){
+                    return;
+                }
+                for(var i =0,l = patterns.length; i<l; i++){
+                   var pattern = patterns[i];
+                   console.log(pattern);
                    if(!(pattern instanceof ns.PatternInterface))
                       throw new Error('ParserInterface: pattern not instance of PatternInterface');
                     pattern._id = this._next_pattern_id;
@@ -356,15 +359,16 @@ if(!window.firecrow) window.firecrow = {};
         copyprops(
             Interface.prototype, {
                 name:'',
-                init_tag: function(name)
+                init_tag: function(name, group)
                 {
                     if(!(typeof name == 'string')) 
                         throw Error('TagPattern: "' + name + '" must be typeof "string"');
                     this.name = name;
+                    this.group = group;
                 }, 
                 start_tag: function()
                 {
-                    return  '<span class="' + this.name + '" >'; 
+                    return  '<span class="' + this.name + '" style="color:'+this.group.color+'" >'; 
                 },
                 end_tag: function()
                 {
@@ -381,12 +385,27 @@ if(!window.firecrow) window.firecrow = {};
                 } 
             });
 
-    var TagPattern = function(tagname, pattern)
+    var TagPattern = function(tagname, pattern, group)
         { 
-            this.init_tag(tagname); 
+            this.init_tag(tagname, group); 
             this.init_pattern(pattern); 
         }
         TagPattern.prototype = new Interface;
+
+    ns.TagPatternGroup = function(name, color, pattern_strings){
+        this.name = name;
+        this.color = color;
+        this.patterns = [];
+        for(var i = 0, l = pattern_strings.length; i<l; i++){
+            this.patterns.push(new ns.TagPattern(name, pattern_strings[i], this));
+        }
+    }
+
+    ns.TagPatternGroup.prototype = {
+        add_to_parser:function(parser){
+            parser.comparemanager.add_patterns(this.patterns);
+        }
+    }
 
     var RegionTagPattern = function(name, start, mid_patterns, end)
         {

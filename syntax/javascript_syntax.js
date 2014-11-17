@@ -3,14 +3,15 @@ if(!window.firecrow) window.firecrow = {};
 
 (function(ns){ 
 
-    if(!(ns.TagPattern && ns.Parser))
-        throw new Error('javascript syntax: requires "TagPattern" and "Parser" not found in "ns"');
+    if(!(ns.TagPattern && ns.Parser && ns.TagPatternGroup))
+        throw new Error('javascript syntax: requires "TagPattern" and "Parser" and "TagPatternGroup" not found in "ns"');
 
+    /*
     var patterns = [];
-    add_patterns = function(name, patterns_arg)
+    add_patterns = function(name, color, patterns_arg)
     {
         for(prop in patterns_arg)
-            patterns.push(new ns.TagPattern(name, patterns_arg[prop]));
+            patterns.push(new ns.TagPattern(name, patterns_arg[prop], group));
     }
 
     add_word_patterns = function(name, patterns_arg)
@@ -27,21 +28,21 @@ if(!window.firecrow) window.firecrow = {};
         return results;
     }
     
-    /*
-    add_word_patterns('syntax-basic',['var','this']); 
-    add_word_patterns('syntax-reserved',['function','for','window']); 
+    //add_word_patterns('syntax-basic',['var','this']); 
+    //add_word_patterns('syntax-reserved',['function','for','window']); 
+
+
+    var syntax_string_quote = new ns.RegionTagPattern(
+        'syntax-string',
+        new ns.Pattern('"'),
+        make_patterns('syntax-string-escape',['\\n','\\r','\\t','\\0']),
+        new ns.Pattern('"')
+    )
+    patterns.push(syntax_string_quote);
     */
 
-    add_patterns('syntax-basic',['var','this']); 
-    add_patterns('syntax-reserved',['for','window']); 
-    add_patterns('syntax-basic',['{','}','[',']','.',';','']); 
-    add_patterns('syntax-reserved',['.','=','+','!=','-','/']); 
-    add_patterns('syntax-standout',['(',')']); 
-
-
-
     // object properties and value
-    add_patterns('syntax-reserved',[
+    var obj_props = new ns.TagPatternGroup('syntax-reserved',' rgb(150,150,150)', [
         'Array',
         'Date',
         'eval',
@@ -62,22 +63,23 @@ if(!window.firecrow) window.firecrow = {};
         'toString',
         'undefined',
         'valueOf'
-        ])
+    ]);
 
-
-
-    
-    /*
-    var syntax_string_quote = new ns.RegionTagPattern(
-        'syntax-string',
-        new ns.Pattern('"'),
-        make_patterns('syntax-string-escape',['\\n','\\r','\\t','\\0']),
-        new ns.Pattern('"')
-    )
-    patterns.push(syntax_string_quote);
-    */
+    var obj_reserved = new ns.TagPatternGroup('syntax-reserved',' rgb(150,150,150)', ['for','window','.','=','+','!=','-','/']);
+    var basic = new ns.TagPatternGroup('syntax-basic', ' rgb(100,100,100)', ['var','this','{','}','[',']','.',';','']);
+    var standout = new ns.TagPatternGroup('syntax-standout',' rgb(150,150,150)', ['(',')']);
 
     ns.JSHighlighter = new ns.Parser(); 
-    ns.Parser.apply(ns.JSHighlighter, patterns);
+    obj_props.add_to_parser(ns.JSHighlighter);
+    obj_reserved.add_to_parser(ns.JSHighlighter)
+    basic.add_to_parser(ns.JSHighlighter)
+    standout.add_to_parser(ns.JSHighlighter)
+
+    ns.js_groups = {
+        obj_props:obj_props,
+        obj_reserved:obj_reserved,
+        basic: basic,
+        standout:standout,
+    }
 
 })(window.firecrow);

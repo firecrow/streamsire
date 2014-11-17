@@ -28,24 +28,30 @@
                 stage.innerHTML = ns.JSHighlighter.parse(inp.value);
             }
 
-            function show_patterns(patterns){
-                 var groups = {}
-                 var pattern_name;
-                 for(var i = 0,l=patterns.length; i<l; i++){
-                      pattern_name = patterns[i].name;
-                      if(!groups[pattern_name]){
-                                groups[pattern_name] = []
-                      }
-                      groups[pattern_name].push(patterns[i]._pattern);
-                 }
+            function show_patterns(groups){
                  var div = document.getElementById('patterns');
-                 var str = '';
+                 div.innerHTML = '';
                  for(var k in groups){
-                     str += '<div class="pattern-group">' + k + '<br>'
-                     str += groups[k].join(', ');
-                     str += '</div>';
+                    var str = '';
+                    var d = document.createElement('DIV');
+                    d.className = 'pattern-group';
+                    var pattern_names = [];
+                    var group = groups[k];
+                    (function(group){
+                        d.onclick = function(){
+                            group.color = 'rgb(255,0,0)';
+                            update();
+                        }
+                    })(group);
+                    for(var i=0,l=group.patterns.length;i<l;i++){
+                        pattern_names.push(group.patterns[i]._pattern);
+                    }
+                    str += '' + group.name + '<br>'
+                    str += pattern_names.join(', ');
+                    str += '';
+                    d.innerHTML = str;
+                    div.appendChild(d);
                  }
-                 div.innerHTML = str;
             }
 
             function show_pending(pending, comparemanager){
@@ -83,7 +89,7 @@
                 parser.pre_conclude_callback = function(){
                     show_pending(this.comparemanager._pending, this.comparemanager);
                 }
-                show_patterns(ns.JSHighlighter.comparemanager.patterns);
+                show_patterns(ns.js_groups);
             }
             //-->
         </script>
@@ -121,10 +127,10 @@
                 font-family: monospace;
             }
             .stage span { font-family: monospace;}
-            .syntax-reserved { color: rgb(150,150,150);  }
-            .syntax-basic { color: rgb(100,100,100);  }
-            .syntax-standout { color: rgb(150,150,150); font-weight: bold;  }
-            .syntax-string { color: rgb(150,150,150); font-weight: bold;  }
+            .syntax-reserved {   }
+            .syntax-basic { }
+            .syntax-standout { font-weight: bold;  }
+            .syntax-string { font-weight: bold;  }
             .syntax-string-escape { color: rgb(100,100,100); font-weight: normal;  }
             #log {clear:both;}
             #pending {
