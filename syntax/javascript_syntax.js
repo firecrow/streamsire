@@ -33,7 +33,7 @@ if(!window.firecrow) window.firecrow = {};
     */
 
     add_patterns('syntax-basic',['var','this']); 
-    add_patterns('syntax-reserved',['function','for','window']); 
+    add_patterns('syntax-reserved',['for','window']); 
     add_patterns('syntax-basic',['{','}','[',']','.',';','']); 
     add_patterns('syntax-reserved',['.','=','+','!=','-','/']); 
     add_patterns('syntax-standout',['(',')']); 

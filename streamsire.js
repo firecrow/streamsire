@@ -171,6 +171,7 @@ if(!window.firecrow) window.firecrow = {};
                    for(var i = 0,l = this._pending.length; i<l; i++){
                        var pattern = this._pending[i];
                        if(pattern.state === ns.PatternInterface.MATCH){
+                           this.value += this._shelf.substr(0, this._shelf.length-pattern._pattern.length+1);
                            this.value += pattern.handle();
                            this._shelf = '';
                            this._pending = [];
