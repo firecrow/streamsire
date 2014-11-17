@@ -42,7 +42,7 @@
                  var str = '';
                  for(var k in groups){
                      str += '<div class="pattern-group">' + k + '<br>'
-                     str += groups[k].join(',');
+                     str += groups[k].join(', ');
                      str += '</div>';
                  }
                  div.innerHTML = str;
@@ -53,11 +53,14 @@
                 var str = '';
                 for(var i=0,l=pending.length;i<l;i++){
                     var pattern_string = pending[i]._pattern;
-                    var pending_shelf = comparemanager._shelf;
-                    var remaining = pattern_string.substr(pending_shelf.length, pattern_string.length)
+                    var pending_shelf = comparemanager._shelf.substr(comparemanager._shelf.length-pending[i]._count, comparemanager._shelf.length);
+                    var remaining = pattern_string.substr(pending[i]._count, pattern_string.length)
                     str += '<div class="pending">';
                     str += '<span class="pending-shelf">'+ pending_shelf + '</span>';
                     str += remaining; 
+                    str += '</div>';
+                    str += '<div class="pending">';
+                    str +=  pending[i]._pattern;
                     str += '</div>';
                 }
                 div.innerHTML = str;

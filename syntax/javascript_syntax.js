@@ -37,6 +37,35 @@ if(!window.firecrow) window.firecrow = {};
     add_patterns('syntax-basic',['{','}','[',']','.',';','']); 
     add_patterns('syntax-reserved',['.','=','+','!=','-','/']); 
     add_patterns('syntax-standout',['(',')']); 
+
+
+
+    // object properties and value
+    add_patterns('syntax-reserved',[
+        'Array',
+        'Date',
+        'eval',
+        'function',
+        'hasOwnProperty',
+        'Infinity',
+        'isFinite',
+        'isNaN',
+        'isPrototypeOf',
+        'length',
+        'Math',
+        'NaN',
+        'name',
+        'Number',
+        'Object',
+        'prototype',
+        'String',
+        'toString',
+        'undefined',
+        'valueOf'
+        ])
+
+
+
     
     /*
     var syntax_string_quote = new ns.RegionTagPattern(
