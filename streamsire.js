@@ -132,7 +132,6 @@ if(!window.firecrow) window.firecrow = {};
             },
             run: function(c)
             {
-                console.log('--- in '+c+'---');
                 for(var pi = 0; pi < this.patterns.length; pi++){
                     this._evaluate_pattern(c, this.patterns[pi]);
                 }
@@ -144,20 +143,14 @@ if(!window.firecrow) window.firecrow = {};
                         this._shelf += c;
                     }
                 }
-                console.log(this.value);
-                console.log(this._shelf);
-                console.log(this.state);
             },
             _evaluate_pattern: function(c, pattern){
                 pattern.increment(c);
-                if(pattern._pattern === '!='){
-                    console.log('state:'+pattern.state+', count:' + pattern._count);
-                }
-                if(pattern.state == ns.PatternInterface.MATCHING){
+                if(pattern.state === ns.PatternInterface.MATCHING || pattern.state === ns.PatternInterface.MATCH){
                    if(this._pending.indexOf(pattern) === -1){
                       this._pending.push(pattern);
                    }
-                }else if(pattern.state == ns.PatternInterface.NO_MATCH){
+                }else if(pattern.state === ns.PatternInterface.NO_MATCH){
                     var idx = this._pending.indexOf(pattern);
                     if(idx !== -1){
                       this._pending.splice(idx,1);
