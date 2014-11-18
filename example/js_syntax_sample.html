@@ -55,17 +55,25 @@
 
             function show_pending(pending, comparemanager){
                 var div = document.getElementById('pending');
-                var str = '';
+                div.innerHTML = '';
+                var node_obj = []
                 for(var i=0,l=pending.length;i<l;i++){
                     var pattern_string = pending[i]._pattern;
-                    var pending_shelf = comparemanager._shelf.substr(comparemanager._shelf.length-pending[i]._count, comparemanager._shelf.length);
+                    var count = comparemanager._shelf.length-pending[i]._count;
+                    var shelf = comparemanager._shelf;
+                    var pending_shelf = comparemanager._shelf.substr(count, shelf.length);
                     var remaining = pattern_string.substr(pending[i]._count, pattern_string.length)
-                    str += '<div class="pending">';
-                    str += '<span class="pending-shelf">'+ pending_shelf + '</span>';
-                    str += remaining; 
-                    str += '</div>';
+                    node_obj.push({nodeName:'DIV', 
+                        properties:{className:'pending'}, 
+                        children:[ 
+                            { nodeName:'SPAN', 
+                                properties:{className:'pending-shelf'}, 
+                                children:[pending_shelf]}, 
+                            remaining]});
                 }
-                div.innerHTML = str;
+                if(node_obj.length){
+                    div.appendChild(utils.dom.mknode.apply(utils.dom.mknode ,node_obj));
+                }
             }
         
             window.onload = function()
