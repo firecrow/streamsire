@@ -7,6 +7,7 @@
         <!-- these module scripts would probably be joined into one script for deployment -->
         <script src="../streamsire.js"></script>
         <script src="../syntax/javascript_syntax.js"></script>
+        <script src="../utils.js"></script>
         <script>
             //<!--
             var ns = window.firecrow;
@@ -32,24 +33,22 @@
                  var div = document.getElementById('patterns');
                  div.innerHTML = '';
                  for(var k in groups){
-                    var str = '';
-                    var d = document.createElement('DIV');
-                    d.className = 'pattern-group';
-                    var pattern_names = [];
                     var group = groups[k];
+                    var pattern_names = utils.map(group.patterns, function(item){
+                        return item._pattern;
+                    });
+                    var node_obj = {nodeName:'DIV', properties:{className:'pattern-group'},
+                        children: [
+                            {nodeName:'B', children:[group.name]},
+                            {nodeName:'br'}, pattern_names.join(', ')]
+                    }
+                    var d = utils.dom.mknode(node_obj);
                     (function(group){
                         d.onclick = function(){
                             group.color = 'rgb(255,0,0)';
                             update();
                         }
                     })(group);
-                    for(var i=0,l=group.patterns.length;i<l;i++){
-                        pattern_names.push(group.patterns[i]._pattern);
-                    }
-                    str += '' + group.name + '<br>'
-                    str += pattern_names.join(', ');
-                    str += '';
-                    d.innerHTML = str;
                     div.appendChild(d);
                  }
             }
