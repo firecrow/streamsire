@@ -130,7 +130,6 @@ if(!window.firecrow) window.firecrow = {};
                 }
                 for(var i =0,l = patterns.length; i<l; i++){
                    var pattern = patterns[i];
-                   console.log(pattern);
                    if(!(pattern instanceof ns.PatternInterface))
                       throw new Error('ParserInterface: pattern not instance of PatternInterface');
                     pattern._id = this._next_pattern_id;
@@ -143,7 +142,7 @@ if(!window.firecrow) window.firecrow = {};
                 for(var pi = 0; pi < this.patterns.length; pi++){
                     this._evaluate_pattern(c, this.patterns[pi]);
                 }
-                var match_found = this._evaluate_state();
+                var match_found = this.evaluate_state();
                 if(c != String.fromCharCode(4)){// terminating string not part of content
                     if(!match_found && this.state === ns.PatternInterface.NO_MATCH){
                         this.value += this._shelf+c;
@@ -166,7 +165,7 @@ if(!window.firecrow) window.firecrow = {};
                    }
                 }
             },
-            _evaluate_state: function(){// returns boolean for match found this character
+            evaluate_state: function(){// returns boolean for match found this character
                if(!this._pending.length){
                  this.state = ns.PatternInterface.NO_MATCH;
                }else{
@@ -174,19 +173,26 @@ if(!window.firecrow) window.firecrow = {};
                    for(var i = 0,l = this._pending.length; i<l; i++){
                        var pattern = this._pending[i];
                        if(pattern.state === ns.PatternInterface.MATCH){
-                           this.value += this._shelf.substr(0, this._shelf.length-pattern._pattern.length+1);
-                           this.value += pattern.handle();
-                           this._shelf = '';
-                           for(var i = 0, l= this._pending.length; i<l; i++){
-                               this._pending[i].reset();
+                           if(pattern.handle_custom){
+                                return pattern.handle_custom(this);
+                           }else{
+                               this.value += this._shelf.substr(0, this._shelf.length-pattern._pattern.length+1);
+                               this.value += pattern.handle();
+                               this._shelf = '';
+                               this.reset_pending();
+                               this.state = ns.PatternInterface.NO_MATCH;
                            }
-                           this._pending = [];
-                           this.state = ns.PatternInterface.NO_MATCH;
                            return true;
                        }
                    }
                }
                return false;
+            },
+            reset_pending:function(){
+               for(var i = 0, l= this._pending.length; i<l; i++){
+                   this._pending[i].reset();
+               }
+               this._pending = [];
             },
             reset: function()
             {
@@ -392,12 +398,17 @@ if(!window.firecrow) window.firecrow = {};
         }
         TagPattern.prototype = new Interface;
 
-    ns.TagPatternGroup = function(name, color, pattern_strings){
+    ns.TagPatternGroup = function(name, color, pattern_strings, wordpattern_strings){
         this.name = name;
         this.color = color;
         this.patterns = [];
         for(var i = 0, l = pattern_strings.length; i<l; i++){
             this.patterns.push(new ns.TagPattern(name, pattern_strings[i], this));
+        }
+        if(wordpattern_strings){
+            for(var i = 0, l = wordpattern_strings.length; i<l; i++){
+                this.patterns.push(new ns.TagWordPattern(name, wordpattern_strings[i], this));
+            }
         }
     }
 
@@ -415,9 +426,9 @@ if(!window.firecrow) window.firecrow = {};
         RegionTagPattern.prototype = new Interface;
         copyprops(RegionTagPattern.prototype, ns.RegionPatternOverlay);
 
-    var TagWordPattern = function(tagname,pattern)
+    var TagWordPattern = function(tagname,pattern, group)
         { 
-            this.init_tag(tagname); 
+            this.init_tag(tagname, group); 
             this.init_pattern(pattern);
             this._prev_char = '';
             this._before_subexp = /\W/;
@@ -476,12 +487,19 @@ if(!window.firecrow) window.firecrow = {};
                     }
                     return true; 
                 }, 
-                handle: function()
-                {
-                    this.value = this.start_tag() + this.value.substring(0, this._pattern.length) 
-                        +   this.end_tag() + this.value.substring(this._pattern.length, this.value.length);
-                    return this.value;
-                }, 
+                handle_custom: function(comparemanager){
+                    // get previous shelf before this container
+                    comparemanager.value += comparemanager._shelf.substr(0, comparemanager._shelf.length-this._count);
+                    // handle content of the word
+                    comparemanager.value += this.handle();
+                    //after the word
+                    comparemanager._shelf = comparemanager._shelf.substr(comparemanager._shelf.length-this._count, comparemanager._shelf.length);
+                    var idx = comparemanager._pending.indexOf(this);
+                    comparemanager._pending.splice(idx,1);
+                    this.reset();
+                    // reevaluate for anything in process from the word break char
+                    return comparemanager.evaluate_state();
+                },
                 conclude: function()
                 {
                     if(this._count >= this._pattern.length)
@@ -495,7 +513,13 @@ if(!window.firecrow) window.firecrow = {};
                 {
                     this._prev_char = '';
                     this._reset();
-                }
+                },
+                _get_shelf: function()
+                {
+                    var val = this._shelf;
+                    this._shelf = ''; 
+                    return val; 
+                }, 
              });
 
     copyprops(ns, {'TagPatternInterface':Interface, 'TagPattern':TagPattern, 
