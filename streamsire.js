@@ -368,34 +368,27 @@ if(!window.firecrow) window.firecrow = {};
 
     var TagPatternInterface = function(){};
         TagPatternInterface.prototype = new ns.PatternInterface;
-        copyprops(
-            TagPatternInterface.prototype, {
-                name:'',
-                init_tag: function(name, group)
-                {
-                    if(!(typeof name == 'string')) 
-                        throw Error('TagPattern: "' + name + '" must be typeof "string"');
-                    this.name = name;
-                    this.group = group;
-                }, 
-                start_tag: function()
-                {
-                    return  '<span class="' + this.name + '" style="color:'+this.group.color+'" >'; 
-                },
-                end_tag: function()
-                {
-                    return  '</span>';
-                }, 
-                handle: function()
-                {
-                    this.value = this.start_tag() + this.value + this.end_tag();
-                    return this.value;
-                }, 
-                toString: function()
-                {
-                    return '[object TagPattern]';
-                } 
-            });
+        var proto = TagPatternInterface.prototype;
+            proto.name = '';
+            proto.init_tag = function(name, group){
+                if(!(typeof name == 'string')) 
+                    throw Error('TagPattern: "' + name + '" must be typeof "string"');
+                this.name = name;
+                this.group = group;
+            }
+            proto.start_tag = function(){
+                return  '<span class="' + this.name + '" style="color:'+this.group.color+'" >'; 
+            }
+            proto.end_tag = function(){
+                return  '</span>';
+            }
+            proto.handle = function(){
+                this.value = this.start_tag() + this.value + this.end_tag();
+                return this.value;
+            } 
+            proto.toString = function(){
+                return '[object TagPattern]';
+            } 
 
     var TagPattern = function(tagname, pattern, group)
         { 
