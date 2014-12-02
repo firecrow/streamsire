@@ -95,7 +95,6 @@ if(!window.firecrow) window.firecrow = {};
     }
     ns.Parser.prototype = {
         comparemanager:{},
-        pre_conclude_callback:function(){},
         parse: function(content) 
         {
             console.log('---');
@@ -107,7 +106,6 @@ if(!window.firecrow) window.firecrow = {};
             return this.comparemanager.value + this.comparemanager._shelf || '';
         },
         conclude: function(){
-            this.pre_conclude_callback();
             this.comparemanager.run(String.fromCharCode(4));
         },
     }
@@ -331,12 +329,6 @@ if(!window.firecrow) window.firecrow = {};
             toString: function()
             {
                 return '[object RegionPattern]';
-            }, 
-            conclude: function()
-            {
-                if(this.state == ns.PatternInterface.MATCHING)
-                    this.state = ns.PatternInterface.MATCH;
-                this.value = this._get_shelf(); 
             }
         }
 
@@ -420,7 +412,6 @@ if(!window.firecrow) window.firecrow = {};
         }
         TagWordPattern.prototype = new TagPatternInterface;
         TagWordPattern.prototype._increment = ns.PatternInterface.prototype.increment;
-        TagWordPattern.prototype._conclude = ns.PatternInterface.prototype.conclude;
         TagWordPattern.prototype._reset = ns.PatternInterface.prototype.reset;
         copyprops(TagWordPattern.prototype, {
                 // store previous character
@@ -483,15 +474,6 @@ if(!window.firecrow) window.firecrow = {};
                     this.reset();
                     // reevaluate for anything in process from the word break char
                     return comparemanager.evaluate_state();
-                },
-                conclude: function()
-                {
-                    if(this._count >= this._pattern.length)
-                    {
-                        this._set(ns.PatternInterface.MATCH, this._get_shelf());
-                        return;
-                    }
-                    this._conclude();
                 },
                 reset: function()
                 {
