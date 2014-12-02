@@ -65,6 +65,8 @@ if(!window.firecrow) window.firecrow = {};
         'valueOf'
     ]);
 
+    
+    /*
     var obj_reserved = new ns.TagPatternGroup('syntax-reserved',
         'rgb(150,150,150)', 
         ['.','=','+','!=','-','/'], 
@@ -73,6 +75,16 @@ if(!window.firecrow) window.firecrow = {};
         'rgb(100,100,100)', 
         ['{','}','[',']','.',';',''], 
         ['var','this']);
+    var standout = new ns.TagPatternGroup('syntax-standout',
+        'rgb(150,150,150)', 
+        ['(',')']);
+    */
+    var obj_reserved = new ns.TagPatternGroup('syntax-reserved',
+        'rgb(150,150,150)', 
+        ['.','=','+','!=','-','/','for','window']);
+    var basic = new ns.TagPatternGroup('syntax-basic', 
+        'rgb(100,100,100)', 
+        ['{','}','[',']','.',';','','var','this']);
     var standout = new ns.TagPatternGroup('syntax-standout',
         'rgb(150,150,150)', 
         ['(',')']);

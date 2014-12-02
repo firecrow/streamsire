@@ -99,6 +99,7 @@ if(!window.firecrow) window.firecrow = {};
         pre_conclude_callback:function(){},
         parse: function(content) 
         {
+            console.log('---');
             this.comparemanager.reset();
             for(var i = 0, l = content.length; i<l; i++){
                 this.comparemanager.run(content.charAt(i)); 
@@ -139,6 +140,7 @@ if(!window.firecrow) window.firecrow = {};
             },
             run: function(c)
             {
+                console.log('+'+c);
                 for(var pi = 0; pi < this.patterns.length; pi++){
                     this._evaluate_pattern(c, this.patterns[pi]);
                 }
@@ -156,7 +158,10 @@ if(!window.firecrow) window.firecrow = {};
                 pattern.increment(c);
                 if(pattern.state === ns.PatternInterface.MATCHING || pattern.state === ns.PatternInterface.MATCH){
                    if(this._pending.indexOf(pattern) === -1){
+                      console.debug('>'+ pattern._pattern);
                       this._pending.push(pattern);
+                   }else{
+                      console.debug('='+ pattern._pattern);
                    }
                 }else if(pattern.state === ns.PatternInterface.NO_MATCH){
                     var idx = this._pending.indexOf(pattern);
@@ -463,7 +468,7 @@ if(!window.firecrow) window.firecrow = {};
                             return false;
                         }
                     }
-                    return true; 
+                    return true;
                 }, 
                 _test_if_lastafter: function(c)
                 {
