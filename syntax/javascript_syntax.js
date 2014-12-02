@@ -66,11 +66,11 @@ if(!window.firecrow) window.firecrow = {};
     ]);
 
     
-    /*
     var obj_reserved = new ns.TagPatternGroup('syntax-reserved',
         'rgb(150,150,150)', 
         ['.','=','+','!=','-','/'], 
         ['for','window']);
+    /*
     var basic = new ns.TagPatternGroup('syntax-basic', 
         'rgb(100,100,100)', 
         ['{','}','[',']','.',';',''], 
@@ -78,10 +78,10 @@ if(!window.firecrow) window.firecrow = {};
     var standout = new ns.TagPatternGroup('syntax-standout',
         'rgb(150,150,150)', 
         ['(',')']);
-    */
     var obj_reserved = new ns.TagPatternGroup('syntax-reserved',
         'rgb(150,150,150)', 
         ['.','=','+','!=','-','/','for','window']);
+    */
     var basic = new ns.TagPatternGroup('syntax-basic', 
         'rgb(100,100,100)', 
         ['{','}','[',']','.',';','','var','this']);

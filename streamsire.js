@@ -67,6 +67,9 @@ if(!window.firecrow) window.firecrow = {};
                 this.value = '';
                 this._shelf = '';
                 this._count = 0;
+            },
+            toString: function(){
+                return '[PatternInterface '+this._pattern+']';
             }
         }
 
@@ -95,6 +98,7 @@ if(!window.firecrow) window.firecrow = {};
     }
     ns.Parser.prototype = {
         comparemanager:{},
+        pre_conclude_callback:function(){},
         parse: function(content) 
         {
             console.log('---');
@@ -106,6 +110,7 @@ if(!window.firecrow) window.firecrow = {};
             return this.comparemanager.value + this.comparemanager._shelf || '';
         },
         conclude: function(){
+            this.pre_conclude_callback();
             this.comparemanager.run(String.fromCharCode(4));
         },
     }
@@ -155,10 +160,7 @@ if(!window.firecrow) window.firecrow = {};
                 pattern.increment(c);
                 if(pattern.state === ns.PatternInterface.MATCHING || pattern.state === ns.PatternInterface.MATCH){
                    if(this._pending.indexOf(pattern) === -1){
-                      console.debug('>'+ pattern._pattern);
                       this._pending.push(pattern);
-                   }else{
-                      console.debug('='+ pattern._pattern);
                    }
                 }else if(pattern.state === ns.PatternInterface.NO_MATCH){
                     var idx = this._pending.indexOf(pattern);
@@ -178,7 +180,7 @@ if(!window.firecrow) window.firecrow = {};
                            if(pattern.handle_custom){
                                 return pattern.handle_custom(this);
                            }else{
-                               this.value += this._shelf.substr(0, this._shelf.length-pattern._pattern.length+1);
+                               this.value += this._shelf.substr(0, this._shelf.length-pattern._pattern.length);
                                this.value += pattern.handle();
                                this._shelf = '';
                                this.reset_pending();
@@ -190,7 +192,8 @@ if(!window.firecrow) window.firecrow = {};
                }
                return false;
             },
-            reset_pending:function(){
+            reset_pending:function(len){
+               // len add in support for clearing all patterns before a given length
                for(var i = 0, l= this._pending.length; i<l; i++){
                    this._pending[i].reset();
                }
@@ -406,9 +409,11 @@ if(!window.firecrow) window.firecrow = {};
         { 
             this.init_tag(tagname, group); 
             this.init_pattern(pattern);
+            this._prev_met = false;
             this._prev_char = '';
-            this._before_subexp = /\W/;
-            this._after_subexp = /\W/;
+            this._before_reg = /\W/;
+            this._after_reg = /\W/;
+            this._after_len = 1;
         }
         TagWordPattern.prototype = new TagPatternInterface;
         TagWordPattern.prototype._increment = ns.PatternInterface.prototype.increment;
@@ -419,73 +424,51 @@ if(!window.firecrow) window.firecrow = {};
                 // increment
                 increment: function(c)
                 { 
-                    if(!(this._test_if_first(c) && this._test_if_lastafter(c)))
-                    {
-                        this._prev_char = c;
+                    //console.log('increment '+this+' '+this._count);
+                    // handle conclusion if applicable
+                    if(this._count === this._pattern.length-1){
+                        console.log('in after ' +this);
+                        if(this._after_reg.test(c)){
+                            this.state = ns.PatternInterface.MATCH;
+                        }else{
+                            this.reset();
+                        }
                         return;
                     }
-                    this._prev_char = c;
-                    this._increment(c);
+                    // handle start if applicable
+                    if(this._count === 0){
+                        //console.log('in before ' +this);
+                        this._prev_met = this._prev_char === '' || this._before_reg.test(c);
+                    }
+                    this._prev_char = c;// track state of previous character for start
+                    if(this._prev_met){
+                        console.log(c+' calling increment ' +this+' '+this._count);
+                        this._increment(c);
+                        console.log(c+'called increment ' +this +' '+this._count);
+                    }
+                    // if match found wait for next char to conclude word break
+                    if(this.state === ns.PatternInterface.MATCH){
+                        //console.log('match found waiting for after ' +this);
+                        this.state == ns.PatternInterface.MATCHING;
+                    }
                 },
-                _test_if_first: function(c)
-                {
-                    if(this._count == 0)
-                    {
-                        if(!(this._prev_char === '' || this._before_subexp.test(this._prev_char)))
-                        {
-                            this._add_to_shelf(c);
-                            this._set(ns.PatternInterface.NO_MATCH, this._get_shelf());
-                            return false;
-                        }
-                    }
-                    return true;
-                }, 
-                _test_if_lastafter: function(c)
-                {
-                    if(this._count == (this._pattern.length -1))
-                    {
-                        if(this._pattern[this._count] == c)
-                        {
-                            this._add_to_shelf(c);
-                            this._set(ns.PatternInterface.MATCHING, '');
-                            return false;
-                        }
-                    }
-                    else if(this._count == this._pattern.length)
-                    {
-                        this._add_to_shelf(c);      
-                        if(!(this._prev_char === '' || this._after_subexp.test(c)))
-                            this._set(ns.PatternInterface.NO_MATCH, this._get_shelf());
-                        else
-                            this._set(ns.PatternInterface.MATCH, this._get_shelf());
-                        return false;
-                    }
-                    return true; 
-                }, 
                 handle_custom: function(comparemanager){
-                    // get previous shelf before this container
-                    comparemanager.value += comparemanager._shelf.substr(0, comparemanager._shelf.length-this._count);
-                    // handle content of the word
+                    var pattern_len = this._pattern.length;
+                    var shelf_len = comparemanager._shelf.length;
+                    comparemanager.value += comparemanager._shelf.substr(0, shelf_len-(pattern_len+this._after_len));
+                    console.log(comparemanager._shelf.substr(0, shelf_len-(pattern_len+this._after_len)));
                     comparemanager.value += this.handle();
-                    //after the word
-                    comparemanager._shelf = comparemanager._shelf.substr(comparemanager._shelf.length-this._count, comparemanager._shelf.length);
-                    var idx = comparemanager._pending.indexOf(this);
-                    comparemanager._pending.splice(idx,1);
+                    comparemanager._shelf = comparemanager._shelf.substr(shelf_len-this._after_len, shelf_len);
+                    console.log(comparemanager._shelf.substr(shelf_len-this._after_len, shelf_len));
+                    comparemanager.reset_pending(1);
                     this.reset();
-                    // reevaluate for anything in process from the word break char
                     return comparemanager.evaluate_state();
                 },
-                reset: function()
-                {
+                reset: function(){
+                    this._prev_met = false;
                     this._prev_char = '';
                     this._reset();
-                },
-                _get_shelf: function()
-                {
-                    var val = this._shelf;
-                    this._shelf = ''; 
-                    return val; 
-                }, 
+                }
              });
 
 
