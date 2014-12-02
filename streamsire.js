@@ -10,12 +10,12 @@ if(!window.firecrow) window.firecrow = {};
             to[prop] = from[prop];
     }
 
-    var Interface = function(){};
-        Interface.NO_MATCH = 0;
-        Interface.MATCHING = 1;
-        Interface.MATCH = 2;
-        Interface.status_codes = ['NO_MATCH','MATCHING','MATCH'];
-        Interface.prototype = {
+    var PatternInterface = function(){};
+        PatternInterface.NO_MATCH = 0;
+        PatternInterface.MATCHING = 1;
+        PatternInterface.MATCH = 2;
+        PatternInterface.status_codes = ['NO_MATCH','MATCHING','MATCH'];
+        PatternInterface.prototype = {
             init_pattern: function(pattern)
             {
                 if(!(typeof pattern == 'string')) 
@@ -32,14 +32,14 @@ if(!window.firecrow) window.firecrow = {};
                 if(this._pattern.charAt(this._count) == c){
                     if(this._count == (this._pattern.length-1)) {
                         this._add_to_shelf(c);
-                        this._set(Interface.MATCH, this._get_shelf());
+                        this._set(PatternInterface.MATCH, this._get_shelf());
                     }else{
                         this._add_to_shelf(c);
-                        this._set(Interface.MATCHING, '');
+                        this._set(PatternInterface.MATCHING, '');
                     }
                 }else{
                     this._add_to_shelf(c);
-                    this._set(Interface.NO_MATCH, this._get_shelf());
+                    this._set(PatternInterface.NO_MATCH, this._get_shelf());
                 }
             },
             _set: function(state, value)
@@ -65,19 +65,20 @@ if(!window.firecrow) window.firecrow = {};
             }, 
             reset: function()
             {
-                this.state = Interface.NO_MATCH;
+                this.state = PatternInterface.NO_MATCH;
                 this.value = '';
                 this._shelf = '';
                 this._count = 0;
             }
         }
 
-    var Pattern = function(pattern){   this.init_pattern(pattern);   }
+    Pattern = function(pattern){   
+        this.init_pattern(pattern);   
+    }
+    Pattern.prototype = new PatternInterface;
 
-        Pattern.prototype = new Interface;
-
-    copyprops(ns, {'PatternInterface':Interface, 'Pattern':Pattern});
-
+    ns.Pattern = Pattern;
+    ns.PatternInterface = PatternInterface;
 
 })(window.firecrow); 
 
