@@ -18,8 +18,6 @@ if(!window.firecrow) window.firecrow = {};
         PatternInterface.prototype = {
             init_pattern: function(pattern)
             {
-                if(!(typeof pattern == 'string')) 
-                    throw Error('PatternInterface: "' + name + '" must be instanceof "string"');
                 this._pattern = pattern
                 this._count = 0; 
                 this._shelf = '';
@@ -371,8 +369,6 @@ if(!window.firecrow) window.firecrow = {};
         var proto = TagPatternInterface.prototype;
             proto.name = '';
             proto.init_tag = function(name, group){
-                if(!(typeof name == 'string')) 
-                    throw Error('TagPattern: "' + name + '" must be typeof "string"');
                 this.name = name;
                 this.group = group;
             }
@@ -386,16 +382,12 @@ if(!window.firecrow) window.firecrow = {};
                 this.value = this.start_tag() + this.value + this.end_tag();
                 return this.value;
             } 
-            proto.toString = function(){
-                return '[object TagPattern]';
-            } 
 
-    var TagPattern = function(tagname, pattern, group)
-        { 
-            this.init_tag(tagname, group); 
-            this.init_pattern(pattern); 
-        }
-        TagPattern.prototype = new TagPatternInterface;
+    var TagPattern = function(tagname, pattern, group){ 
+        this.init_tag(tagname, group); 
+        this.init_pattern(pattern); 
+    }
+    TagPattern.prototype = new TagPatternInterface;
 
     ns.TagPatternGroup = function(name, color, pattern_strings, wordpattern_strings){
         this.name = name;
@@ -417,13 +409,6 @@ if(!window.firecrow) window.firecrow = {};
         }
     }
 
-    var RegionTagPattern = function(name, start, mid_patterns, end)
-        {
-            this.init_tag(name);
-            this.init_region(start, mid_patterns, end);
-        } 
-        RegionTagPattern.prototype = new TagPatternInterface;
-        copyprops(RegionTagPattern.prototype, ns.RegionPatternOverlay);
 
     var TagWordPattern = function(tagname,pattern, group)
         { 
@@ -520,6 +505,16 @@ if(!window.firecrow) window.firecrow = {};
                     return val; 
                 }, 
              });
+
+
+
+    var RegionTagPattern = function(name, start, mid_patterns, end)
+        {
+            this.init_tag(name);
+            this.init_region(start, mid_patterns, end);
+        } 
+        RegionTagPattern.prototype = new TagPatternInterface;
+        copyprops(RegionTagPattern.prototype, ns.RegionPatternOverlay);
 
     copyprops(ns, {'TagPatternInterface':TagPatternInterface, 'TagPattern':TagPattern, 
         'RegionTagPattern':RegionTagPattern,
