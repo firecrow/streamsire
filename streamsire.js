@@ -366,10 +366,10 @@ if(!window.firecrow) window.firecrow = {};
             to[prop] = from[prop];
     }
 
-    var Interface = function(){};
-        Interface.prototype = new ns.PatternInterface;
+    var TagPatternInterface = function(){};
+        TagPatternInterface.prototype = new ns.PatternInterface;
         copyprops(
-            Interface.prototype, {
+            TagPatternInterface.prototype, {
                 name:'',
                 init_tag: function(name, group)
                 {
@@ -402,7 +402,7 @@ if(!window.firecrow) window.firecrow = {};
             this.init_tag(tagname, group); 
             this.init_pattern(pattern); 
         }
-        TagPattern.prototype = new Interface;
+        TagPattern.prototype = new TagPatternInterface;
 
     ns.TagPatternGroup = function(name, color, pattern_strings, wordpattern_strings){
         this.name = name;
@@ -429,7 +429,7 @@ if(!window.firecrow) window.firecrow = {};
             this.init_tag(name);
             this.init_region(start, mid_patterns, end);
         } 
-        RegionTagPattern.prototype = new Interface;
+        RegionTagPattern.prototype = new TagPatternInterface;
         copyprops(RegionTagPattern.prototype, ns.RegionPatternOverlay);
 
     var TagWordPattern = function(tagname,pattern, group)
@@ -440,7 +440,7 @@ if(!window.firecrow) window.firecrow = {};
             this._before_subexp = /\W/;
             this._after_subexp = /\W/;
         }
-        TagWordPattern.prototype = new Interface;
+        TagWordPattern.prototype = new TagPatternInterface;
         TagWordPattern.prototype._increment = ns.PatternInterface.prototype.increment;
         TagWordPattern.prototype._conclude = ns.PatternInterface.prototype.conclude;
         TagWordPattern.prototype._reset = ns.PatternInterface.prototype.reset;
@@ -528,7 +528,7 @@ if(!window.firecrow) window.firecrow = {};
                 }, 
              });
 
-    copyprops(ns, {'TagPatternInterface':Interface, 'TagPattern':TagPattern, 
+    copyprops(ns, {'TagPatternInterface':TagPatternInterface, 'TagPattern':TagPattern, 
         'RegionTagPattern':RegionTagPattern,
         'TagWordPattern':TagWordPattern}); 
 
