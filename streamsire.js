@@ -68,6 +68,7 @@ if(!window.firecrow) window.firecrow = {};
                 this._shelf = '';
                 this._count = 0;
             },
+            init_state: function(){},// called when the parser starts a new stream
             toString: function(){
                 return '[PatternInterface '+this._pattern+']';
             }
@@ -101,7 +102,6 @@ if(!window.firecrow) window.firecrow = {};
         pre_conclude_callback:function(){},
         parse: function(content) 
         {
-            console.log('---');
             this.comparemanager.reset();
             for(var i = 0, l = content.length; i<l; i++){
                 this.comparemanager.run(content.charAt(i)); 
@@ -142,13 +142,16 @@ if(!window.firecrow) window.firecrow = {};
             },
             run: function(c)
             {
-                console.log('+'+c);
+                console.log('+"'+c+'"');
+                console.log('!"'+this._shelf+'"');
+                console.log(ns.PatternInterface.status_codes[this.state]);
+
                 for(var pi = 0; pi < this.patterns.length; pi++){
                     this._evaluate_pattern(c, this.patterns[pi]);
                 }
                 var match_found = this.evaluate_state();
                 if(c != String.fromCharCode(4)){// terminating string not part of content
-                    if(!match_found && this.state === ns.PatternInterface.NO_MATCH){
+                    if(!match_found && (this.state === ns.PatternInterface.NO_MATCH)){
                         this.value += this._shelf+c;
                         this._shelf = '';
                     }else if(this.state === ns.PatternInterface.MATCHING){
@@ -178,7 +181,8 @@ if(!window.firecrow) window.firecrow = {};
                        var pattern = this._pending[i];
                        if(pattern.state === ns.PatternInterface.MATCH){
                            if(pattern.handle_custom){
-                                return pattern.handle_custom(this);
+                                pattern.handle_custom(this);
+                                return this.evaluate_state();
                            }else{
                                this.value += this._shelf.substr(0, this._shelf.length-pattern._pattern.length);
                                this.value += pattern.handle();
@@ -202,8 +206,10 @@ if(!window.firecrow) window.firecrow = {};
             reset: function()
             {
                 this.value = '';
-                for(var i=0; i< this.patterns.length; i++)
+                for(var i=0; i< this.patterns.length; i++){
+                    this.patterns[i].init_state();
                     this.patterns[i].reset();
+                }
                 this.state = ns.PatternInterface.NO_MATCH;
                 this._shelf = '';
             }
@@ -417,17 +423,18 @@ if(!window.firecrow) window.firecrow = {};
         }
         TagWordPattern.prototype = new TagPatternInterface;
         TagWordPattern.prototype._increment = ns.PatternInterface.prototype.increment;
-        TagWordPattern.prototype._reset = ns.PatternInterface.prototype.reset;
         copyprops(TagWordPattern.prototype, {
                 // store previous character
                 // compare to end character before match
                 // increment
-                increment: function(c)
-                { 
-                    //console.log('increment '+this+' '+this._count);
+                increment: function(c){
+                    if(this._pattern == 'for'){
+                        console.log('p:'+ns.PatternInterface.status_codes[this.state]);
+                        console.log('pm '+this._prev_met);
+                        console.log('c '+this._count);
+                    }
                     // handle conclusion if applicable
-                    if(this._count === this._pattern.length-1){
-                        console.log('in after ' +this);
+                    if(this._count === this._pattern.length){
                         if(this._after_reg.test(c)){
                             this.state = ns.PatternInterface.MATCH;
                         }else{
@@ -436,38 +443,34 @@ if(!window.firecrow) window.firecrow = {};
                         return;
                     }
                     // handle start if applicable
-                    if(this._count === 0){
-                        //console.log('in before ' +this);
-                        this._prev_met = this._prev_char === '' || this._before_reg.test(c);
+                    if(this._count === 0 && !this._prev_met){
+                        this._prev_met = (this._prev_char === '' || this._before_reg.test(c));
+                    }else{
+                        if(this._pattern == 'for'){
+                            console.log('hello');
+                        }
+                        this._increment(c);
+                        // if match found wait for next char to conclude word break
+                        if(this.state === ns.PatternInterface.MATCH){
+                            this.state == ns.PatternInterface.MATCHING;
+                        }
                     }
                     this._prev_char = c;// track state of previous character for start
-                    if(this._prev_met){
-                        console.log(c+' calling increment ' +this+' '+this._count);
-                        this._increment(c);
-                        console.log(c+'called increment ' +this +' '+this._count);
-                    }
-                    // if match found wait for next char to conclude word break
-                    if(this.state === ns.PatternInterface.MATCH){
-                        //console.log('match found waiting for after ' +this);
-                        this.state == ns.PatternInterface.MATCHING;
-                    }
                 },
                 handle_custom: function(comparemanager){
                     var pattern_len = this._pattern.length;
                     var shelf_len = comparemanager._shelf.length;
                     comparemanager.value += comparemanager._shelf.substr(0, shelf_len-(pattern_len+this._after_len));
-                    console.log(comparemanager._shelf.substr(0, shelf_len-(pattern_len+this._after_len)));
+                    console.log("add to value '"+comparemanager._shelf.substr(0, shelf_len-(pattern_len+this._after_len)) +"'");
                     comparemanager.value += this.handle();
                     comparemanager._shelf = comparemanager._shelf.substr(shelf_len-this._after_len, shelf_len);
-                    console.log(comparemanager._shelf.substr(shelf_len-this._after_len, shelf_len));
+                    console.log("new shelf '"+comparemanager._shelf.substr(shelf_len-this._after_len, shelf_len)+"'");
                     comparemanager.reset_pending(1);
                     this.reset();
-                    return comparemanager.evaluate_state();
                 },
-                reset: function(){
+                init_state: function(){
                     this._prev_met = false;
                     this._prev_char = '';
-                    this._reset();
                 }
              });
 
