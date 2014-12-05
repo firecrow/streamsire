@@ -143,9 +143,6 @@ if(!window.firecrow) window.firecrow = {};
             run: function(c)
             {
                 console.log('+"'+c+'"');
-                console.log('!"'+this._shelf+'"');
-                console.log(ns.PatternInterface.status_codes[this.state]);
-
                 for(var pi = 0; pi < this.patterns.length; pi++){
                     this._evaluate_pattern(c, this.patterns[pi]);
                 }
@@ -181,8 +178,8 @@ if(!window.firecrow) window.firecrow = {};
                        var pattern = this._pending[i];
                        if(pattern.state === ns.PatternInterface.MATCH){
                            if(pattern.handle_custom){
-                                pattern.handle_custom(this);
-                                return this.evaluate_state();
+                               pattern.handle_custom(this);
+                               return this.evaluate_state();
                            }else{
                                this.value += this._shelf.substr(0, this._shelf.length-pattern._pattern.length);
                                this.value += pattern.handle();
@@ -424,17 +421,9 @@ if(!window.firecrow) window.firecrow = {};
         TagWordPattern.prototype = new TagPatternInterface;
         TagWordPattern.prototype._increment = ns.PatternInterface.prototype.increment;
         copyprops(TagWordPattern.prototype, {
-                // store previous character
-                // compare to end character before match
-                // increment
                 increment: function(c){
-                    if(this._pattern == 'for'){
-                        console.log('p:'+ns.PatternInterface.status_codes[this.state]);
-                        console.log('pm '+this._prev_met);
-                        console.log('c '+this._count);
-                    }
                     // handle conclusion if applicable
-                    if(this._count === this._pattern.length){
+                    if(this.value.length === this._pattern.length){
                         if(this._after_reg.test(c)){
                             this.state = ns.PatternInterface.MATCH;
                         }else{
@@ -445,15 +434,11 @@ if(!window.firecrow) window.firecrow = {};
                     // handle start if applicable
                     if(this._count === 0 && !this._prev_met){
                         this._prev_met = (this._prev_char === '' || this._before_reg.test(c));
-                    }else{
-                        if(this._pattern == 'for'){
-                            console.log('hello');
-                        }
-                        this._increment(c);
-                        // if match found wait for next char to conclude word break
-                        if(this.state === ns.PatternInterface.MATCH){
-                            this.state == ns.PatternInterface.MATCHING;
-                        }
+                    }
+                    this._increment(c);
+                    // if match found wait for next char to conclude word break
+                    if(this.state === ns.PatternInterface.MATCH){
+                        this.state = ns.PatternInterface.MATCHING;
                     }
                     this._prev_char = c;// track state of previous character for start
                 },
@@ -461,10 +446,8 @@ if(!window.firecrow) window.firecrow = {};
                     var pattern_len = this._pattern.length;
                     var shelf_len = comparemanager._shelf.length;
                     comparemanager.value += comparemanager._shelf.substr(0, shelf_len-(pattern_len+this._after_len));
-                    console.log("add to value '"+comparemanager._shelf.substr(0, shelf_len-(pattern_len+this._after_len)) +"'");
                     comparemanager.value += this.handle();
-                    comparemanager._shelf = comparemanager._shelf.substr(shelf_len-this._after_len, shelf_len);
-                    console.log("new shelf '"+comparemanager._shelf.substr(shelf_len-this._after_len, shelf_len)+"'");
+                    comparemanager._shelf = '';
                     comparemanager.reset_pending(1);
                     this.reset();
                 },
