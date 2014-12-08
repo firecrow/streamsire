@@ -24,8 +24,7 @@
 
             var stage;
             var inp;
-            function update()
-            {
+            function update(){
                 stage.innerHTML = ns.JSHighlighter.parse(inp.value);
             }
 
@@ -80,6 +79,7 @@
             {
                 log = document.getElementById('log');
                 inp = document.getElementsByTagName('TEXTAREA')[0];
+
                 inp.onkeyup = update;
             // todo: handle tab
 
@@ -97,6 +97,10 @@
                     show_pending(this.comparemanager._pending, this.comparemanager);
                 }
                 show_patterns(ns.js_groups);
+
+                var default_text = 'var hi = function(msg){\n    console.log(msg); \n};'
+                inp.innerHTML = default_text;
+                update();
             }
             //-->
         </script>
@@ -106,6 +110,7 @@
                 width:300px; 
                 position:relative;
                 float: left;
+                height: 220px;
             }
             textarea {
                 width: 278px;
@@ -147,7 +152,6 @@
                 color:gray;
             }
             #patterns {
-                float:left;
                 margin-left: 320px;
                 width: 300px;
             }
@@ -160,6 +164,13 @@
                  width: 800px;	
                  margin: 40px auto;
             }
+            .edit-me-label {
+                position:absolute;
+                color: #999999;
+                bottom: 4px;
+                right: 8px;
+                z-index: 3;
+            }
         </style>
 	</head>
 <body>
@@ -167,6 +178,7 @@
 <div class="stage-container">
     <pre class="stage"></pre> 
     <textarea rows="10" cols="40"></textarea>
+    <span class="edit-me-label">edit me</span>
 </div>
 <div id="patterns"></div>
 <div id="pending"></div>
