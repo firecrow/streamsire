@@ -248,7 +248,6 @@ if(!window.firecrow) window.firecrow = {};
                 return  '</span>';
             }
             proto.handle = function(){
-                console.log('handling:'+this.value);
                 this.value = this.start_tag() + this.value + this.end_tag();
                 return this.value;
             } 
@@ -294,7 +293,6 @@ if(!window.firecrow) window.firecrow = {};
         var twproto = TagWordPattern.prototype;
         twproto._increment = ns.PatternInterface.prototype.increment;
         twproto.increment = function(c){
-            //console.log('!'+this._shelf);
             // handle conclusion if applicable
             if(this._count === this._pattern.length){
                 if(this._after_reg.test(c)){
@@ -312,14 +310,9 @@ if(!window.firecrow) window.firecrow = {};
 
             //this._increment(c);
 
-            // debug
+            // debug prep for region
             if(this._increment(c) && this._pattern === 'for'){
-                console.log(this.state);
-                console.log(this._count);
-                console.log('increment!');
-                console.log('>'+this._shelf);
                 this._shelf = this._shelf.substr(0, this._shelf.length-1);
-                console.log('<'+this._shelf);
                 var random = 'rgb('+[Math.round((Math.random()*150)+100), Math.round((Math.random()*150)+100), Math.round((Math.random()*150)+100)].join(',')+')';
                 this._shelf += '<span style="color:'+random+'">'+c+'</span>';
                 console.log('='+this._shelf);
@@ -348,11 +341,10 @@ if(!window.firecrow) window.firecrow = {};
         twproto._get_shelf = function(){
             var val = this._shelf;
             if(this.state === ns.PatternInterface.NO_MATCH){
-                //console.log('X');
                 this._shelf = '';
                 this._count = 0; 
             }
-            // DEBUG
+            // DEBUG PREP FOR REGION
             if(this.state === ns.PatternInterface.MATCH){
                 return this._pattern;
             }else{
