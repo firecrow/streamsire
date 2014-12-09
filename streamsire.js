@@ -190,9 +190,10 @@ if(!window.firecrow) window.firecrow = {};
                return false;
             },
             get_shelf:function(){
-                console.log('>'+this._shelf);
                 if(this._pending.length){
-                    return this._pending[0]._shelf;
+                    var top = this._pending[0];
+                    var pre_shelf = this._shelf.substr(0, (this._shelf.length-top._count));
+                    return pre_shelf + top._shelf;
                 }
                 return this._shelf;
             },
@@ -292,7 +293,7 @@ if(!window.firecrow) window.firecrow = {};
         var twproto = TagWordPattern.prototype;
         twproto._increment = ns.PatternInterface.prototype.increment;
         twproto.increment = function(c){
-            console.log('!'+this._shelf);
+            //console.log('!'+this._shelf);
             // handle conclusion if applicable
             if(this._count === this._pattern.length){
                 if(this._after_reg.test(c)){
@@ -349,7 +350,7 @@ if(!window.firecrow) window.firecrow = {};
         twproto._get_shelf = function(){
             var val = this._shelf;
             if(this.state === ns.PatternInterface.NO_MATCH){
-                console.log('X');
+                //console.log('X');
                 this._shelf = '';
                 this._count = 0; 
             }
