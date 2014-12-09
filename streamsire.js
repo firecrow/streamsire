@@ -4,12 +4,6 @@ if(!window) window = {}; // for command line testing
 if(!window.firecrow) window.firecrow = {};
 (function(ns){// pattern
 
-    function copyprops(to, from)
-    { 
-        for(prop in from)
-            to[prop] = from[prop];
-    }
-
     var PatternInterface = function(){};
         PatternInterface.NO_MATCH = 0;
         PatternInterface.MATCHING = 1;
@@ -220,23 +214,6 @@ if(!window.firecrow) window.firecrow = {};
                 this._shelf = '';
             }
         }
-
-})(window.firecrow); // pass namespace in here
-
-/*-- region.js --*/
-if(!window) window = {}; // for command line testing
-if(!window.firecrow) window.firecrow = {};
-
-(function(ns){//  region patterns
-
-    if(!(ns.PatternInterface && ns.Parser))
-        throw new Error('region patterns namespace: depends on "PatternInterface" and "Parser", not found in "ns"');
-    
-    function copyprops(to, from)
-    { 
-        for(prop in from)
-            to[prop] = from[prop];
-    }
 
 })(window.firecrow); // pass namespace in here
 
