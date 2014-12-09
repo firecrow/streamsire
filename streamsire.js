@@ -35,9 +35,11 @@ if(!window.firecrow) window.firecrow = {};
                         this._add_to_shelf(c);
                         this._set(PatternInterface.MATCHING, '');
                     }
+                    return true;
                 }else{
                     this._add_to_shelf(c);
                     this._set(PatternInterface.NO_MATCH, this._get_shelf());
+                    return false;
                 }
             },
             _set: function(state, value)
@@ -194,10 +196,8 @@ if(!window.firecrow) window.firecrow = {};
                return false;
             },
             get_shelf:function(){
-                console.log('}'+this._pending.length);
                 console.log('>'+this._shelf);
                 if(this._pending.length){
-                    console.log('from get_shelf');
                     return this._pending[0]._shelf;
                 }
                 return this._shelf;
@@ -428,48 +428,72 @@ if(!window.firecrow) window.firecrow = {};
             this._after_len = 1;
         }
         TagWordPattern.prototype = new TagPatternInterface;
-        TagWordPattern.prototype._increment = ns.PatternInterface.prototype.increment;
-        copyprops(TagWordPattern.prototype, {
-                increment: function(c){
-                    // handle conclusion if applicable
-                    if(this.value.length === this._pattern.length){
-                        if(this._after_reg.test(c)){
-                            this.state = ns.PatternInterface.MATCH;
-                        }else{
-                            this.reset();
-                        }
-                        return;
-                    }
-                    // handle start if applicable
-                    if(this._count === 0 && !this._prev_met){
-                        this._prev_met = (this._prev_char === '' || this._before_reg.test(c));
-                    }
-                    this._increment(c);
-                    // if match found wait for next char to conclude word break
-                    if(this.state === ns.PatternInterface.MATCH){
-                        this.state = ns.PatternInterface.MATCHING;
-                    }
-                    this._prev_char = c;// track state of previous character for start
-                },
-                handle_custom: function(comparemanager){
-                    var pattern_len = this._pattern.length;
-                    var shelf_len = comparemanager._shelf.length;
-                    comparemanager.value += comparemanager._shelf.substr(0, shelf_len-(pattern_len+this._after_len));
-                    comparemanager.value += this.handle();
-                    comparemanager._shelf = '';
-                    comparemanager.reset_pending(1);
+        var twproto = TagWordPattern.prototype;
+        twproto._increment = ns.PatternInterface.prototype.increment;
+        twproto.increment = function(c){
+            console.log('!'+this._shelf);
+            // handle conclusion if applicable
+            if(this._count === this._pattern.length){
+                if(this._after_reg.test(c)){
+                    this.state = ns.PatternInterface.MATCH;
+                    this._shelf = '';
+                }else{
                     this.reset();
-                },
-                init_state: function(){
-                    this._prev_met = false;
-                    this._prev_char = '';
-                },
-                _get_shelf:function(){
-                    this._count = 0; 
-                    return this._shelf; 
                 }
-             });
+                return;
+            }
+            // handle start if applicable
+            if(this._count === 0 && !this._prev_met){
+                this._prev_met = (this._prev_char === '' || this._before_reg.test(c));
+            }
 
+            //this._increment(c);
+
+            // debug
+            if(this._increment(c) && this._pattern === 'for'){
+                /*
+                console.log(this.state);
+                console.log(this._count);
+                console.log('increment!');
+                console.log('>'+this._shelf);
+                this._shelf = this._shelf.substr(0, this._shelf.length-1);
+                console.log('<'+this._shelf);
+                this._shelf = this._shelf.substr(0, this._shelf.length-1);
+                var random = 'rgb('+[Math.round(Math.random()*150), Math.round(Math.random()*150), Math.round(Math.random()*150)].join(',')+')';
+                this._shelf += '<span style="color:'+random+'">'+c+'</span>';
+                console.log('='+this._shelf);
+                */
+            }
+            // end debug
+
+            // if match found wait for next char to conclude word break
+            if(this.state === ns.PatternInterface.MATCH){
+                this.state = ns.PatternInterface.MATCHING;
+            }
+            this._prev_char = c;// track state of previous character for start
+        }
+        twproto.handle_custom = function(comparemanager){
+            var pattern_len = this._pattern.length;
+            var shelf_len = comparemanager._shelf.length;
+            comparemanager.value += comparemanager._shelf.substr(0, shelf_len-(pattern_len+this._after_len));
+            comparemanager.value += this.handle();
+            comparemanager._shelf = '';
+            comparemanager.reset_pending(1);
+            this.reset();
+        }
+        twproto.init_state = function(){
+            this._prev_met = false;
+            this._prev_char = '';
+        }
+        twproto._get_shelf = function(){
+            var val = this._shelf;
+            if(this.state === ns.PatternInterface.NO_MATCH){
+                console.log('X');
+                this._shelf = '';
+                this._count = 0; 
+            }
+            return val;
+        }
 
 
     var RegionTagPattern = function(name, start, mid_patterns, end)
