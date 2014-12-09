@@ -24,8 +24,7 @@
 
             var stage;
             var inp;
-            function update()
-            {
+            function update(){
                 stage.innerHTML = ns.JSHighlighter.parse(inp.value);
             }
 
@@ -80,6 +79,7 @@
             {
                 log = document.getElementById('log');
                 inp = document.getElementsByTagName('TEXTAREA')[0];
+
                 inp.onkeyup = update;
             // todo: handle tab
 
@@ -97,6 +97,10 @@
                     show_pending(this.comparemanager._pending, this.comparemanager);
                 }
                 show_patterns(ns.js_groups);
+
+                var default_text = 'var hi = function(msg){\n    console.log(msg); \n};'
+                inp.innerHTML = default_text;
+                update();
             }
             //-->
         </script>
@@ -106,12 +110,12 @@
                 width:300px; 
                 position:relative;
                 float: left;
+                height: 220px;
             }
             textarea {
                 width: 278px;
                 height: 100px;
                 display:block;
-                position:absolute;
                 top: 100px;
                 padding: 10px;
                 z-index:2;
@@ -128,7 +132,6 @@
                 background-color: rgb(0,0,0);
                 color: rgb(255,255,255);
                 padding: 10px;
-                position:absolute;
                 top: 0;
                 font-size: 12px;
                 font-family: monospace;
@@ -140,14 +143,10 @@
             .syntax-string { font-weight: bold;  }
             .syntax-string-escape { color: rgb(100,100,100); font-weight: normal;  }
             #log {clear:both;}
-            #pending {
-                float:left;
-            }
             .pending-shelf {
                 color:gray;
             }
             #patterns {
-                float:left;
                 margin-left: 320px;
                 width: 300px;
             }
@@ -160,16 +159,33 @@
                  width: 800px;	
                  margin: 40px auto;
             }
+            .textarea-wrapper {
+                position:relative;
+            }
+            .edit-me-label {
+                position:absolute;
+                color: #999999;
+                bottom: 4px;
+                right: 8px;
+                z-index: 3;
+            }
+            #pending {
+                margin-top: 8px;
+                float:left;
+            }
         </style>
 	</head>
 <body>
 <div id="content">
 <div class="stage-container">
     <pre class="stage"></pre> 
-    <textarea rows="10" cols="40"></textarea>
+    <div class="textarea-wrapper">
+        <textarea rows="10" cols="40"></textarea>
+        <span class="edit-me-label">edit me</span>
+    </div>
+    <div id="pending"></div>
 </div>
 <div id="patterns"></div>
-<div id="pending"></div>
 </div>
 <pre id="log">
 ?

@@ -56,7 +56,7 @@ if(!window.firecrow) window.firecrow = {};
                 this._shelf = ''; 
                 this._count = 0; 
                 return val; 
-            }, 
+            },
             handle: function()
             { 
                 return this.value;
@@ -181,7 +181,7 @@ if(!window.firecrow) window.firecrow = {};
                                pattern.handle_custom(this);
                                return this.evaluate_state();
                            }else{
-                               this.value += this._shelf.substr(0, this._shelf.length-pattern._pattern.length);
+                               this.value += this._shelf.substr(0, (this._shelf.length-pattern._pattern.length)+1);
                                this.value += pattern.handle();
                                this._shelf = '';
                                this.reset_pending();
